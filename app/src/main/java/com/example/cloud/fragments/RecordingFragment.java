@@ -27,6 +27,13 @@ import androidx.preference.PreferenceManager;
 import com.example.cloud.R;
 import com.example.cloud.sensors.SensorFusion;
 import com.example.cloud.sensors.SensorTypes;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 /**
  * A simple {@link Fragment} subclass. The recording fragment is displayed while the app is actively
@@ -106,6 +113,29 @@ public class RecordingFragment extends Fragment {
         // Inflate the layout for this fragment
         ((AppCompatActivity)getActivity()).getSupportActionBar().hide();
         getActivity().setTitle("Recording...");
+
+        // Initialize map fragment
+        SupportMapFragment supportMapFragment= (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.recordingMap);
+
+
+        supportMapFragment.getMapAsync(new OnMapReadyCallback() {
+            /**
+             * {@inheritDoc}
+             * Controls to allow scrolling, tilting, rotating and a compass view of the
+             * map are enabled. A marker is added to the map with the start position and a marker
+             * drag listener is generated to detect when the marker has moved to obtain the new
+             * location.
+             */
+            @Override
+            public void onMapReady(GoogleMap mMap) {
+                mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+                mMap.getUiSettings().setCompassEnabled(true);
+                mMap.getUiSettings().setTiltGesturesEnabled(true);
+                mMap.getUiSettings().setRotateGesturesEnabled(true);
+                mMap.getUiSettings().setScrollGesturesEnabled(true);
+            }
+        });
+
         return rootView;
     }
 
