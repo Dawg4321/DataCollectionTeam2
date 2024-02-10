@@ -2,9 +2,11 @@ package com.example.cloud.fragments;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.location.Location;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,6 +26,7 @@ import androidx.navigation.NavDirections;
 import androidx.navigation.Navigation;
 import androidx.preference.PreferenceManager;
 
+import com.example.cloud.LocationMarker;
 import com.example.cloud.R;
 import com.example.cloud.sensors.SensorFusion;
 import com.example.cloud.sensors.SensorTypes;
@@ -73,10 +76,14 @@ public class RecordingFragment extends Fragment {
     //?
     private Handler refreshDataHandler;
 
-    //variables to store data of the trajectory
+    //variables to calculate and store data of the trajectory
     private float distance;
     private float previousPosX;
     private float previousPosY;
+    // Google maps settings
+    private float zoom = 19f; // map zoom
+    LocationMarker locationMarker; // object used to manage marker position
+    private boolean map_initialised;
 
     /**
      * Public Constructor for the class.
@@ -99,6 +106,8 @@ public class RecordingFragment extends Fragment {
         Context context = getActivity();
         this.settings = PreferenceManager.getDefaultSharedPreferences(context);
         this.refreshDataHandler = new Handler();
+
+        map_initialised = false; // set map initialised to false until map is ready
     }
 
     /**
@@ -128,11 +137,22 @@ public class RecordingFragment extends Fragment {
              */
             @Override
             public void onMapReady(GoogleMap mMap) {
-                mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+                mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
                 mMap.getUiSettings().setCompassEnabled(true);
                 mMap.getUiSettings().setTiltGesturesEnabled(true);
-                mMap.getUiSettings().setRotateGesturesEnabled(true);
                 mMap.getUiSettings().setScrollGesturesEnabled(true);
+
+                // get initial coordinate position
+                float[] startPosition = sensorFusion.getGNSSLatitude(true); // set to true to get start position
+
+                // initialise location marker to initial coordinate position
+                locationMarker = new LocationMarker(mMap, startPosition[0], startPosition[1]);
+
+                // zoom map to initial coordinate position
+                LatLng position = new LatLng(startPosition[0], startPosition[1]);
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(position, zoom));
+
+                map_initialised = true;
             }
         });
 
@@ -283,7 +303,9 @@ public class RecordingFragment extends Fragment {
             positionX.setText(getString(R.string.x, String.format("%.1f", pdrValues[0])));
             positionY.setText(getString(R.string.y, String.format("%.1f", pdrValues[1])));
             // Calculate distance travelled
-            distance += Math.sqrt(Math.pow(pdrValues[0] - previousPosX, 2) + Math.pow(pdrValues[1] - previousPosY, 2));
+            float xDist = pdrValues[0] - previousPosX;
+            float yDist = pdrValues[1] - previousPosY;
+            distance += Math.sqrt(Math.pow(xDist, 2) + Math.pow(yDist, 2));
             distanceTravelled.setText(getString(R.string.meter, String.format("%.2f", distance)));
             previousPosX = pdrValues[0];
             previousPosY = pdrValues[1];
@@ -293,9 +315,13 @@ public class RecordingFragment extends Fragment {
             if(sensorFusion.getElevator()) elevatorIcon.setVisibility(View.VISIBLE);
             else elevatorIcon.setVisibility(View.GONE);
 
+            // update marker position on map if map is initialised
+            if (map_initialised) {
+                locationMarker.updateMarkerPos(yDist, xDist); // update map marker using calculated long/lat distances
+            }
+
             //Rotate compass image to heading angle
             compassIcon.setRotation((float) -Math.toDegrees(sensorFusion.passOrientation()));
-
             // Loop the task again to keep refreshing the data
             refreshDataHandler.postDelayed(refreshDataTask, 500);
         }
