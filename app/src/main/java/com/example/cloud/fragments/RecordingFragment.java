@@ -2,11 +2,9 @@ package com.example.cloud.fragments;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.location.Location;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,6 +19,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavDirections;
 import androidx.navigation.Navigation;
@@ -146,7 +145,8 @@ public class RecordingFragment extends Fragment {
                 float[] startPosition = sensorFusion.getGNSSLatitude(true); // set to true to get start position
 
                 // initialise location marker to initial coordinate position
-                locationMarker = new LocationMarker(mMap, startPosition[0], startPosition[1]);
+                // use pastelBlue color as pathLine colour
+                locationMarker = new LocationMarker(mMap, startPosition[0], startPosition[1], ContextCompat.getColor(getContext(), R.color.pastelBlue));
 
                 // zoom map to initial coordinate position
                 LatLng position = new LatLng(startPosition[0], startPosition[1]);
