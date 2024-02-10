@@ -2,6 +2,11 @@ package com.example.cloud.fragments;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
@@ -33,6 +38,8 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -144,9 +151,20 @@ public class RecordingFragment extends Fragment {
                 // get initial coordinate position
                 float[] startPosition = sensorFusion.getGNSSLatitude(true); // set to true to get start position
 
-                // initialise location marker to initial coordinate position
-                // use pastelBlue color as pathLine colour
-                locationMarker = new LocationMarker(mMap, startPosition[0], startPosition[1], ContextCompat.getColor(getContext(), R.color.pastelBlue));
+                // get bitmap from drawable "navigation" vector image
+                // this will be used as navigation marker icon
+                Drawable markerDrawable = ContextCompat.getDrawable(getContext(), R.drawable.ic_baseline_navigation_24);
+                Bitmap markerBitmap = Bitmap.createBitmap(2 * markerDrawable.getIntrinsicWidth(),
+                                                        2 * markerDrawable.getIntrinsicHeight(),
+                                                               Bitmap.Config.ARGB_8888);
+                // draw colours onto the bitmap
+                markerDrawable.setBounds(0, 0, 2 * markerDrawable.getIntrinsicWidth(), 2 * markerDrawable.getIntrinsicHeight());
+                markerDrawable.draw(new Canvas(markerBitmap));
+
+                // initialise marker to initial coordinate position using marker bitmap and pastelBlue as pathLine colour
+                locationMarker = new LocationMarker(mMap, startPosition[0], startPosition[1],
+                                BitmapDescriptorFactory.fromBitmap(markerBitmap),
+                                ContextCompat.getColor(getContext(), R.color.pastelBlue));
 
                 // zoom map to initial coordinate position
                 LatLng position = new LatLng(startPosition[0], startPosition[1]);
@@ -315,13 +333,15 @@ public class RecordingFragment extends Fragment {
             if(sensorFusion.getElevator()) elevatorIcon.setVisibility(View.VISIBLE);
             else elevatorIcon.setVisibility(View.GONE);
 
+            //Rotate compass image to heading angle
+            float compassRotation = (float) -Math.toDegrees(sensorFusion.passOrientation());
+            compassIcon.setRotation(compassRotation);
+
             // update marker position on map if map is initialised
             if (map_initialised) {
-                locationMarker.updateMarkerPos(yDist, xDist); // update map marker using calculated long/lat distances
+                locationMarker.updateMarker(yDist, xDist, compassRotation); // update map marker using calculated long/lat distances
             }
 
-            //Rotate compass image to heading angle
-            compassIcon.setRotation((float) -Math.toDegrees(sensorFusion.passOrientation()));
             // Loop the task again to keep refreshing the data
             refreshDataHandler.postDelayed(refreshDataTask, 500);
         }
