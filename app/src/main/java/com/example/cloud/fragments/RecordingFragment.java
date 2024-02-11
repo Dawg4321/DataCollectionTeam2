@@ -3,9 +3,7 @@ package com.example.cloud.fragments;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -30,7 +28,7 @@ import androidx.navigation.NavDirections;
 import androidx.navigation.Navigation;
 import androidx.preference.PreferenceManager;
 
-import com.example.cloud.LocationMarker;
+import com.example.cloud.MapManager;
 import com.example.cloud.R;
 import com.example.cloud.sensors.SensorFusion;
 import com.example.cloud.sensors.SensorTypes;
@@ -38,11 +36,8 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
 
 /**
  * A simple {@link Fragment} subclass. The recording fragment is displayed while the app is actively
@@ -59,6 +54,8 @@ public class RecordingFragment extends Fragment {
     //Button to end PDR recording
     private Button stopButton;
     private Button cancelButton;
+    //Button to toggle map type
+    private Button mapToggleButton;
     //Recording icon to show user recording is in progress
     private ImageView recIcon;
     //Compass icon to show user direction of heading
@@ -86,9 +83,9 @@ public class RecordingFragment extends Fragment {
     private float distance;
     private float previousPosX;
     private float previousPosY;
-    // Google maps settings
-    private float zoom = 19f; // map zoom
-    LocationMarker locationMarker; // object used to manage marker position
+
+    // Google maps
+    MapManager mapManager; // object used to manage google maps and marker
     private boolean map_initialised;
 
     /**
@@ -132,7 +129,6 @@ public class RecordingFragment extends Fragment {
         // Initialize map fragment
         SupportMapFragment supportMapFragment= (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.recordingMap);
 
-
         supportMapFragment.getMapAsync(new OnMapReadyCallback() {
             /**
              * {@inheritDoc}
@@ -143,32 +139,17 @@ public class RecordingFragment extends Fragment {
              */
             @Override
             public void onMapReady(GoogleMap mMap) {
-                mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
-                mMap.getUiSettings().setCompassEnabled(true);
-                mMap.getUiSettings().setTiltGesturesEnabled(true);
-                mMap.getUiSettings().setScrollGesturesEnabled(true);
-
                 // get initial coordinate position
                 float[] startPosition = sensorFusion.getGNSSLatitude(true); // set to true to get start position
 
-                // get bitmap from drawable "navigation" vector image
-                // this will be used as navigation marker icon
+                // get drawable "navigation" vector image for map marker use
                 Drawable markerDrawable = ContextCompat.getDrawable(getContext(), R.drawable.ic_baseline_navigation_24);
-                Bitmap markerBitmap = Bitmap.createBitmap(2 * markerDrawable.getIntrinsicWidth(),
-                                                        2 * markerDrawable.getIntrinsicHeight(),
-                                                               Bitmap.Config.ARGB_8888);
-                // draw colours onto the bitmap
-                markerDrawable.setBounds(0, 0, 2 * markerDrawable.getIntrinsicWidth(), 2 * markerDrawable.getIntrinsicHeight());
-                markerDrawable.draw(new Canvas(markerBitmap));
 
-                // initialise marker to initial coordinate position using marker bitmap and pastelBlue as pathLine colour
-                locationMarker = new LocationMarker(mMap, startPosition[0], startPosition[1],
-                                BitmapDescriptorFactory.fromBitmap(markerBitmap),
-                                ContextCompat.getColor(getContext(), R.color.pastelBlue));
-
-                // zoom map to initial coordinate position
-                LatLng position = new LatLng(startPosition[0], startPosition[1]);
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(position, zoom));
+                // initialise mapManager to control GoogleMap obj
+                mapManager = new MapManager(mMap, startPosition[0], startPosition[1],
+                                markerDrawable,
+                                ContextCompat.getColor(getContext(), R.color.pastelBlue),
+                                ContextCompat.getColor(getContext(), R.color.goldYellow));
 
                 map_initialised = true;
             }
@@ -241,6 +222,17 @@ public class RecordingFragment extends Fragment {
                 NavDirections action = RecordingFragmentDirections.actionRecordingFragmentToHomeFragment();
                 Navigation.findNavController(view).navigate(action);
                 if(autoStop != null) autoStop.cancel();
+            }
+        });
+
+        // mapToggleButton to toggle map view between normal and satellite
+        this.mapToggleButton = getView().findViewById(R.id.mapToggleButton);
+        this.mapToggleButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (map_initialised) {
+                    mapManager.toggleMapMode();
+                };
             }
         });
 
@@ -339,7 +331,7 @@ public class RecordingFragment extends Fragment {
 
             // update marker position on map if map is initialised
             if (map_initialised) {
-                locationMarker.updateMarker(yDist, xDist, compassRotation); // update map marker using calculated long/lat distances
+                mapManager.updateMarker(yDist, xDist, compassRotation); // update map marker using calculated long/lat distances
             }
 
             // Loop the task again to keep refreshing the data
