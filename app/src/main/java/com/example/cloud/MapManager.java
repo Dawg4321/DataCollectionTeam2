@@ -3,17 +3,21 @@ package com.example.cloud;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.GroundOverlay;
+import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class MapManager {
@@ -21,6 +25,12 @@ public class MapManager {
     private GoogleMap googleMap;
     private Marker locationMarker; // user position marker
     private Polyline pathLine; // line representing the user's path
+    private GroundOverlay indoorViewOverlay;
+
+    // IndoorView
+    private List<IndoorView> unviewableIndoorViews; // list of currently unviewable indoor views
+    private List<IndoorView> viewableIndoorViews; // list of currently available indoor views
+    IndoorView currentIndoorView; // current indoor view
 
     // current marker and previous marker positions
     private float currentLongPosition;
@@ -35,15 +45,28 @@ public class MapManager {
 
     // config variables
     private static final float zoom = 19f; // map zoom
-    private boolean normal_map; // bool to control whether satellite or normal map is used
+    private boolean normalMap; // bool to control whether satellite or normal map is used
 
     public MapManager(GoogleMap mMap, float initialPosLat, float initialPosLong, Drawable markerDrawable, int markerColor, int lineColor) {
         // initialise googleMap
         googleMap = mMap;
-        mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE); // set map to satellite mode
-        normal_map = false;
+        googleMap.getUiSettings().setScrollGesturesEnabled(true); // enable scroll gesture so other parts of map can be viewed while recording
 
-        mMap.getUiSettings().setScrollGesturesEnabled(true); // enable scroll gesture so other parts of map can be viewed while recording
+        // set initial map to satellite mode
+        googleMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+        normalMap = false;
+
+        // indoor map setup
+        // initialised indoor view lists
+        unviewableIndoorViews = loadIndoorViews(); // load hardcoded indoor maps into unviewable views
+        viewableIndoorViews = new ArrayList<IndoorView>(); // set to empty until next position update
+
+        // initialise indoor GroundViewOverlay using first image in unviewableIndoorMaps
+        GroundOverlayOptions indoorViewOpts = new GroundOverlayOptions()
+                .image(unviewableIndoorViews.get(0).getBitMap())
+                .positionFromBounds(unviewableIndoorViews.get(0).getViewBounds());
+        indoorViewOverlay = googleMap.addGroundOverlay(indoorViewOpts);
+        hideIndoorView();
 
         // ensure previous and current positions have a known initial value
         currentLatPosition = initialPosLat;
@@ -51,7 +74,7 @@ public class MapManager {
         previousLatPosition = currentLatPosition;
         previousLongPosition = currentLongPosition;
 
-        // initialise position marker
+        // initialising position marker
         // create bitmap of icon from drawables
         Bitmap markerBitmap = Bitmap.createBitmap(2 * markerDrawable.getIntrinsicWidth(),
                 2 * markerDrawable.getIntrinsicHeight(),
@@ -75,6 +98,24 @@ public class MapManager {
         googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentLatPosition,currentLongPosition), zoom));
     }
 
+    public List<IndoorView> loadIndoorViews(){
+        List<IndoorView> hardcodedIndoorViews = new ArrayList<IndoorView>();
+
+        // add nucleus building
+        LatLng nucleusSouthEast = new LatLng(55.9227634,-3.1746006);
+        LatLng nucleusNorthEast = new LatLng(55.9233976,-3.1738120);
+        List<LatLng> nucleusPolygon = Arrays.asList(new LatLng(55.9227952,-3.1746006), // polygon to determine if map available
+                new LatLng(55.9227952,-3.1738120),
+                new LatLng(55.9233137,-3.1738120),
+                new LatLng(55.9233137,-3.1746006),
+                new LatLng(55.922795,-3.1746006));
+
+        hardcodedIndoorViews.add(new IndoorView(nucleusSouthEast, nucleusNorthEast, nucleusPolygon,
+                BitmapDescriptorFactory.fromResource(R.drawable.nucleusg)));
+
+        return hardcodedIndoorViews;
+    }
+
     public void updateMarker(float latDist, float longDist, float markerRotation) {
         // store last marker position
         previousLatPosition = currentLatPosition;
@@ -95,14 +136,54 @@ public class MapManager {
         pathLine.setPoints(pathCordList);
     }
 
-    public void toggleMapMode(){
-        if (normal_map) {
+    public void toggleMapMode() {
+        if (normalMap) { // change to satellite from normal map view
             googleMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
-            normal_map = false;
-        }
-        else {
+            normalMap = false;
+        } else { // change to normal from satellite map view
             googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-            normal_map = true;
+            normalMap = true;
         }
     }
+
+    public void updateViewableIndoorViews() {
+
+        // updating currently viewable indoor views
+        List<IndoorView> newViewableViews = new ArrayList<IndoorView>();;
+        List<IndoorView> newUnviewableViews = new ArrayList<IndoorView>();;
+        // gathering newly viewable views if location is now inside a view's polygon
+        for (IndoorView view: unviewableIndoorViews) {
+            if (view.isLocationInView(new LatLng(currentLatPosition, currentLongPosition))) {
+                newViewableViews.add(view);
+            }
+        }
+        // gathering now unviewable views if location is outside of a view's polygon
+        for (IndoorView view: viewableIndoorViews) {
+            if (!view.isLocationInView(new LatLng(currentLatPosition, currentLongPosition))) {
+                newUnviewableViews.add(view);
+            }
+        }
+        // swapping locations of newly viewable and unviewable views
+        unviewableIndoorViews.removeAll(newViewableViews);
+        viewableIndoorViews.addAll(newViewableViews);
+        viewableIndoorViews.removeAll(newUnviewableViews);
+        unviewableIndoorViews.addAll(newUnviewableViews);
+
+        // update currently shown view current view is gone and another view is available
+        if (!viewableIndoorViews.contains(currentIndoorView) && viewableIndoorViews.size() > 0) {
+            currentIndoorView = viewableIndoorViews.get(0);
+            updateCurrentIndoorView(currentIndoorView);
+        }
+    }
+
+    private void updateCurrentIndoorView(IndoorView view) {
+        indoorViewOverlay.setPositionFromBounds(view.getViewBounds());
+        indoorViewOverlay.setImage(view.getBitMap());
+    }
+
+    public boolean isIndoorViewViewable() {
+        return viewableIndoorViews.size() > 0;
+    }
+    public void hideIndoorView() { indoorViewOverlay.setVisible(false); }
+    public void showIndoorView() { indoorViewOverlay.setVisible(true); }
 }

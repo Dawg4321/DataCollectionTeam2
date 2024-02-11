@@ -2,8 +2,6 @@ package com.example.cloud.fragments;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -32,11 +30,9 @@ import com.example.cloud.MapManager;
 import com.example.cloud.R;
 import com.example.cloud.sensors.SensorFusion;
 import com.example.cloud.sensors.SensorTypes;
-import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 
 /**
@@ -56,6 +52,8 @@ public class RecordingFragment extends Fragment {
     private Button cancelButton;
     //Button to toggle map type
     private Button mapToggleButton;
+    // Button to toggle ability to see indoors
+    private Button indoorToggleButton;
     //Recording icon to show user recording is in progress
     private ImageView recIcon;
     //Compass icon to show user direction of heading
@@ -86,7 +84,8 @@ public class RecordingFragment extends Fragment {
 
     // Google maps
     MapManager mapManager; // object used to manage google maps and marker
-    private boolean map_initialised;
+    private boolean map_initialised; // bool to determine whether google map is done initialising
+    private boolean indoorViewEnabled; // bool to control whether indoor buildings are visible
 
     /**
      * Public Constructor for the class.
@@ -127,7 +126,7 @@ public class RecordingFragment extends Fragment {
         getActivity().setTitle("Recording...");
 
         // Initialize map fragment
-        SupportMapFragment supportMapFragment= (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.recordingMap);
+        SupportMapFragment supportMapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.recordingMap);
 
         supportMapFragment.getMapAsync(new OnMapReadyCallback() {
             /**
@@ -236,6 +235,25 @@ public class RecordingFragment extends Fragment {
             }
         });
 
+        // buildingToggleButton to toggle whether to use indoor buildings
+        this.indoorToggleButton = getView().findViewById(R.id.indoorToggleButton);
+        this.indoorToggleButton.setVisibility(View.GONE); // keep button invisible until a indoor view is available
+        this.indoorToggleButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (map_initialised) {
+                    if (indoorViewEnabled) { // hide indoor view as already shown
+                        mapManager.hideIndoorView();
+                        indoorViewEnabled = false;
+                    }
+                    else { // show indoor view as already hidden
+                        mapManager.showIndoorView();
+                        indoorViewEnabled = true;
+                    }
+                };
+            }
+        });
+
         // Display the progress of the recording when a max record length is set
         this.timeRemaining = getView().findViewById(R.id.timeRemainingBar);
 
@@ -329,9 +347,19 @@ public class RecordingFragment extends Fragment {
             float compassRotation = (float) -Math.toDegrees(sensorFusion.passOrientation());
             compassIcon.setRotation(compassRotation);
 
-            // update marker position on map if map is initialised
+            // only update is map is initialised
             if (map_initialised) {
                 mapManager.updateMarker(yDist, xDist, compassRotation); // update map marker using calculated long/lat distances
+                mapManager.updateViewableIndoorViews(); // update currently available indoor views
+                if (!mapManager.isIndoorViewViewable()) {
+                    // hide indoor view button and indoor view if no indoor views available
+                    mapManager.hideIndoorView();
+                    indoorToggleButton.setVisibility(View.GONE);
+                }
+                else {
+                    // show indoor view button as an indoor view as indoor view available
+                    indoorToggleButton.setVisibility(View.VISIBLE);
+                }
             }
 
             // Loop the task again to keep refreshing the data
