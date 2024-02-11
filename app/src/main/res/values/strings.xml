@@ -42,7 +42,7 @@
     <string name="position">PDR Position</string>
     <string name="id">ID</string>
     <string name="datetime">Date&amp;Time</string>
-    <string name="elevation">Elevation: %1s</string>
+    <string name="elevation">Elev: %1s</string>
     <string name="averageStepLgn">Avg. Step Length</string>
     <string name="correctStepLgn">Enter corrected length</string>
     <string name="locationInstructions">Long press and drag the marker to your start location</string>
@@ -64,7 +64,7 @@
 
     <!-- Content Descriptions -->
     <string name="recording">Recording in progress</string>
-    <string name="distance_travelled">Distance travelled:</string>
+    <string name="distance_travelled">Dist:</string>
     <string name="uploadTitle">Manual upload</string>
     <string name="emptyUploadTitle">No trajectories to upload</string>
 

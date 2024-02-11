@@ -2,6 +2,9 @@ package com.example.cloud.fragments;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
@@ -19,14 +22,22 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavDirections;
 import androidx.navigation.Navigation;
 import androidx.preference.PreferenceManager;
 
+import com.example.cloud.MapManager;
 import com.example.cloud.R;
 import com.example.cloud.sensors.SensorFusion;
 import com.example.cloud.sensors.SensorTypes;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.LatLng;
 
 /**
  * A simple {@link Fragment} subclass. The recording fragment is displayed while the app is actively
@@ -43,6 +54,8 @@ public class RecordingFragment extends Fragment {
     //Button to end PDR recording
     private Button stopButton;
     private Button cancelButton;
+    //Button to toggle map type
+    private Button mapToggleButton;
     //Recording icon to show user recording is in progress
     private ImageView recIcon;
     //Compass icon to show user direction of heading
@@ -66,10 +79,14 @@ public class RecordingFragment extends Fragment {
     //?
     private Handler refreshDataHandler;
 
-    //variables to store data of the trajectory
+    //variables to calculate and store data of the trajectory
     private float distance;
     private float previousPosX;
     private float previousPosY;
+
+    // Google maps
+    MapManager mapManager; // object used to manage google maps and marker
+    private boolean map_initialised;
 
     /**
      * Public Constructor for the class.
@@ -92,6 +109,8 @@ public class RecordingFragment extends Fragment {
         Context context = getActivity();
         this.settings = PreferenceManager.getDefaultSharedPreferences(context);
         this.refreshDataHandler = new Handler();
+
+        map_initialised = false; // set map initialised to false until map is ready
     }
 
     /**
@@ -106,6 +125,36 @@ public class RecordingFragment extends Fragment {
         // Inflate the layout for this fragment
         ((AppCompatActivity)getActivity()).getSupportActionBar().hide();
         getActivity().setTitle("Recording...");
+
+        // Initialize map fragment
+        SupportMapFragment supportMapFragment= (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.recordingMap);
+
+        supportMapFragment.getMapAsync(new OnMapReadyCallback() {
+            /**
+             * {@inheritDoc}
+             * Controls to allow scrolling, tilting, rotating and a compass view of the
+             * map are enabled. A marker is added to the map with the start position and a marker
+             * drag listener is generated to detect when the marker has moved to obtain the new
+             * location.
+             */
+            @Override
+            public void onMapReady(GoogleMap mMap) {
+                // get initial coordinate position
+                float[] startPosition = sensorFusion.getGNSSLatitude(true); // set to true to get start position
+
+                // get drawable "navigation" vector image for map marker use
+                Drawable markerDrawable = ContextCompat.getDrawable(getContext(), R.drawable.ic_baseline_navigation_24);
+
+                // initialise mapManager to control GoogleMap obj
+                mapManager = new MapManager(mMap, startPosition[0], startPosition[1],
+                                markerDrawable,
+                                ContextCompat.getColor(getContext(), R.color.pastelBlue),
+                                ContextCompat.getColor(getContext(), R.color.goldYellow));
+
+                map_initialised = true;
+            }
+        });
+
         return rootView;
     }
 
@@ -173,6 +222,17 @@ public class RecordingFragment extends Fragment {
                 NavDirections action = RecordingFragmentDirections.actionRecordingFragmentToHomeFragment();
                 Navigation.findNavController(view).navigate(action);
                 if(autoStop != null) autoStop.cancel();
+            }
+        });
+
+        // mapToggleButton to toggle map view between normal and satellite
+        this.mapToggleButton = getView().findViewById(R.id.mapToggleButton);
+        this.mapToggleButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (map_initialised) {
+                    mapManager.toggleMapMode();
+                };
             }
         });
 
@@ -253,7 +313,9 @@ public class RecordingFragment extends Fragment {
             positionX.setText(getString(R.string.x, String.format("%.1f", pdrValues[0])));
             positionY.setText(getString(R.string.y, String.format("%.1f", pdrValues[1])));
             // Calculate distance travelled
-            distance += Math.sqrt(Math.pow(pdrValues[0] - previousPosX, 2) + Math.pow(pdrValues[1] - previousPosY, 2));
+            float xDist = pdrValues[0] - previousPosX;
+            float yDist = pdrValues[1] - previousPosY;
+            distance += Math.sqrt(Math.pow(xDist, 2) + Math.pow(yDist, 2));
             distanceTravelled.setText(getString(R.string.meter, String.format("%.2f", distance)));
             previousPosX = pdrValues[0];
             previousPosY = pdrValues[1];
@@ -264,7 +326,13 @@ public class RecordingFragment extends Fragment {
             else elevatorIcon.setVisibility(View.GONE);
 
             //Rotate compass image to heading angle
-            compassIcon.setRotation((float) -Math.toDegrees(sensorFusion.passOrientation()));
+            float compassRotation = (float) -Math.toDegrees(sensorFusion.passOrientation());
+            compassIcon.setRotation(compassRotation);
+
+            // update marker position on map if map is initialised
+            if (map_initialised) {
+                mapManager.updateMarker(yDist, xDist, compassRotation); // update map marker using calculated long/lat distances
+            }
 
             // Loop the task again to keep refreshing the data
             refreshDataHandler.postDelayed(refreshDataTask, 500);
