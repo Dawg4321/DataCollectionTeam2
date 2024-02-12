@@ -54,6 +54,10 @@ public class RecordingFragment extends Fragment {
     private Button mapToggleButton;
     // Button to toggle ability to see indoors
     private Button indoorToggleButton;
+    // Button to see next floor in building
+    private Button floorUpButton;
+    // Button to see previous floor in building
+    private Button floorDownButton;
     //Recording icon to show user recording is in progress
     private ImageView recIcon;
     //Compass icon to show user direction of heading
@@ -237,7 +241,7 @@ public class RecordingFragment extends Fragment {
 
         // buildingToggleButton to toggle whether to use indoor buildings
         this.indoorToggleButton = getView().findViewById(R.id.indoorToggleButton);
-        this.indoorToggleButton.setVisibility(View.GONE); // keep button invisible until a indoor view is available
+        this.indoorToggleButton.setVisibility(View.GONE); // keep button invisible until an indoor view is available
         this.indoorToggleButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -245,11 +249,46 @@ public class RecordingFragment extends Fragment {
                     if (indoorViewEnabled) { // hide indoor view as already shown
                         mapManager.hideIndoorView();
                         indoorViewEnabled = false;
+
+                        // hide floor up/down buttons as indoor view disabled
+                        floorUpButton.setVisibility(View.GONE);
+                        floorDownButton.setVisibility(View.GONE);
                     }
                     else { // show indoor view as already hidden
                         mapManager.showIndoorView();
                         indoorViewEnabled = true;
+
+                        // show floor view buttons as indoor view enabled
+                        updateFloorViewButtons();
                     }
+                };
+            }
+        });
+
+        // floorUpButton to see next floor in building
+        this.floorUpButton = getView().findViewById(R.id.floorUpButton);
+        this.floorUpButton.setVisibility(View.GONE); // keep button invisible until an indoor view is available
+        this.floorUpButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (map_initialised) {
+                    mapManager.showNextIndoorView();
+                    // viewed floor changed thus need to update floor view buttons
+                    updateFloorViewButtons();
+                };
+            }
+        });
+
+        // floorDownButton to see next floor in building
+        this.floorDownButton = getView().findViewById(R.id.floorDownButton);
+        this.floorDownButton.setVisibility(View.GONE); // keep button invisible until an indoor view is available
+        this.floorDownButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (map_initialised) {
+                    mapManager.showPrevIndoorView();
+                    // viewed floor changed thus need to update floor view buttons
+                    updateFloorViewButtons();
                 };
             }
         });
@@ -355,10 +394,16 @@ public class RecordingFragment extends Fragment {
                     // hide indoor view button and indoor view if no indoor views available
                     mapManager.hideIndoorView();
                     indoorToggleButton.setVisibility(View.GONE);
+                    floorUpButton.setVisibility(View.GONE);
+                    floorDownButton.setVisibility(View.GONE);
                 }
                 else {
                     // show indoor view button as an indoor view as indoor view available
                     indoorToggleButton.setVisibility(View.VISIBLE);
+                    // update floor view buttons only when indoor view has been enabled
+                    if (indoorViewEnabled) {
+                        updateFloorViewButtons();
+                    }
                 }
             }
 
@@ -367,6 +412,21 @@ public class RecordingFragment extends Fragment {
         }
     };
 
+
+    private void updateFloorViewButtons() {
+        // show/hide floorUpButton as floors above based on current view availability
+        if (mapManager.isNextIndoorView()) {
+            floorUpButton.setVisibility(View.VISIBLE);
+        } else {
+            floorUpButton.setVisibility(View.GONE);
+        }
+        // show/hide floorDownButton as floors below based on current view availability
+        if (mapManager.isPrevIndoorView()) {
+            floorDownButton.setVisibility(View.VISIBLE);
+        } else {
+            floorDownButton.setVisibility(View.GONE);
+        }
+    }
     /**
      * Displays a blinking red dot to signify an ongoing recording.
      *

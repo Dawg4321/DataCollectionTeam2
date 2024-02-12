@@ -112,6 +112,10 @@ public class MapManager {
 
         hardcodedIndoorViews.add(new IndoorView(nucleusSouthEast, nucleusNorthEast, nucleusPolygon,
                 BitmapDescriptorFactory.fromResource(R.drawable.nucleusg)));
+        hardcodedIndoorViews.add(new IndoorView(nucleusSouthEast, nucleusNorthEast, nucleusPolygon,
+                BitmapDescriptorFactory.fromResource(R.drawable.nucleusg)));
+        hardcodedIndoorViews.add(new IndoorView(nucleusSouthEast, nucleusNorthEast, nucleusPolygon,
+                BitmapDescriptorFactory.fromResource(R.drawable.nucleusg)));
 
         return hardcodedIndoorViews;
     }
@@ -176,14 +180,47 @@ public class MapManager {
         }
     }
 
-    private void updateCurrentIndoorView(IndoorView view) {
-        indoorViewOverlay.setPositionFromBounds(view.getViewBounds());
-        indoorViewOverlay.setImage(view.getBitMap());
+    public void showNextIndoorView() {
+        int viewIdx = viewableIndoorViews.indexOf(currentIndoorView);
+        if (viewIdx + 1 < viewableIndoorViews.size()) {
+            currentIndoorView = viewableIndoorViews.get(viewIdx + 1);
+        }
+        updateCurrentIndoorView(currentIndoorView);
+    }
+
+    public void showPrevIndoorView() {
+        int viewIdx = viewableIndoorViews.indexOf(currentIndoorView);
+        if (viewIdx - 1 >= 0) {
+            currentIndoorView = viewableIndoorViews.get(viewIdx - 1);
+        }
+        updateCurrentIndoorView(currentIndoorView);
+    }
+
+    public boolean isNextIndoorView() {
+        int viewIdx = viewableIndoorViews.indexOf(currentIndoorView);
+        if (viewIdx + 1 < viewableIndoorViews.size()) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isPrevIndoorView() {
+        int viewIdx = viewableIndoorViews.indexOf(currentIndoorView);
+        if (viewIdx - 1 >= 0) {
+            return true;
+        }
+        return false;
     }
 
     public boolean isIndoorViewViewable() {
         return viewableIndoorViews.size() > 0;
     }
+
+    private void updateCurrentIndoorView(IndoorView view) {
+        indoorViewOverlay.setPositionFromBounds(view.getViewBounds());
+        indoorViewOverlay.setImage(view.getBitMap());
+    }
+    
     public void hideIndoorView() { indoorViewOverlay.setVisible(false); }
     public void showIndoorView() { indoorViewOverlay.setVisible(true); }
 }

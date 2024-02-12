@@ -72,9 +72,9 @@
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="10dp"
                 android:src="@drawable/ic_baseline_navigation_24"
-                app:tint="@color/pastelBlue"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/elevatorImage" />
+                app:layout_constraintTop_toBottomOf="@+id/currentPositionCard"
+                app:tint="@color/pastelBlue" />
 
             <ImageView
                 android:id="@+id/elevatorImage"
@@ -85,7 +85,7 @@
                 android:elevation="2dp"
                 android:src="@drawable/ic_baseline_elevator_24"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/currentPositionCard" />
+                app:layout_constraintTop_toBottomOf="@+id/compass" />
 
             <androidx.cardview.widget.CardView
                 android:id="@+id/currentPositionCard"
@@ -222,6 +222,34 @@
                 app:iconSize="40dp"
                 app:layout_constraintBottom_toTopOf="@+id/mapToggleButton"
                 app:layout_constraintEnd_toEndOf="parent" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/floorUpButton"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:layout_marginTop="100dp"
+                android:layout_marginEnd="12dp"
+                android:background="@android:color/transparent"
+                app:icon="@drawable/baseline_keyboard_double_arrow_up_24"
+                app:iconGravity="textStart"
+                app:iconSize="80dp"
+                app:iconTint="@color/darkLogoBlue"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/currentPositionCard" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/floorDownButton"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:layout_marginTop="180dp"
+                android:layout_marginEnd="12dp"
+                android:background="@android:color/transparent"
+                app:icon="@drawable/baseline_keyboard_double_arrow_down_24"
+                app:iconGravity="textStart"
+                app:iconSize="80dp"
+                app:iconTint="@color/darkLogoBlue"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/currentPositionCard" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </FrameLayout>
