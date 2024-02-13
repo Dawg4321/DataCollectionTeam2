@@ -94,9 +94,10 @@ public class RecordingFragment extends Fragment {
 
     // Google maps
     MapManager mapManager; // object used to manage google maps and marker
-    private boolean mapInitialised; // bool to determine whether google map is done initialising
-    private boolean indoorViewEnabled; // bool to control whether indoor building views are visible
-    private boolean polyViewEnabled; // bool to control whether poly of available buildings is visible
+    private boolean isMapInitialised; // bool to determine whether google map is done initialising
+    private boolean isIndoorViewEnabled; // bool to control whether indoor building views are visible
+    private boolean isPolyViewEnabled; // bool to control whether poly of available buildings is visible
+    private boolean isNormalMap; // bool to control whether satellite or normal map is displayed
 
     /**
      * Public Constructor for the class.
@@ -120,9 +121,10 @@ public class RecordingFragment extends Fragment {
         this.settings = PreferenceManager.getDefaultSharedPreferences(context);
         this.refreshDataHandler = new Handler();
 
-        mapInitialised = false; // set map initialised to false until map is ready
-        indoorViewEnabled = false; // set indoor view to disabled until inside a boundary
-        polyViewEnabled = false; // disable polyViewButton until map is ready
+        isMapInitialised = false; // set map initialised to false until map is ready
+        isIndoorViewEnabled = false; // set indoor view to disabled until inside a boundary
+        isPolyViewEnabled = false; // disable polyViewButton until map is ready
+        isNormalMap = false; // disable map view changes until map is ready
     }
 
     /**
@@ -164,7 +166,7 @@ public class RecordingFragment extends Fragment {
                                 ContextCompat.getColor(getContext(), R.color.goldYellow),
                                 ContextCompat.getColor(getContext(), R.color.lightLogoBlue));
 
-                mapInitialised = true;
+                isMapInitialised = true;
             }
         });
 
@@ -252,13 +254,20 @@ public class RecordingFragment extends Fragment {
         });
 
         // mapToggleButton to toggle map view between normal and satellite
-        polyViewEnabled = false;
+        isPolyViewEnabled = false;
         this.mapToggleButton = getView().findViewById(R.id.mapToggleButton);
         this.mapToggleButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (mapInitialised) {
-                    mapManager.toggleMapMode();
+                if (isMapInitialised) {
+                    if (isNormalMap) {
+                        mapManager.showSatelliteMap();
+                        isNormalMap = false;
+                    }
+                    else {
+                        mapManager.showNormalMap();
+                        isNormalMap = true;
+                    }
                 };
             }
         });
@@ -269,10 +278,10 @@ public class RecordingFragment extends Fragment {
         this.indoorToggleButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (mapInitialised) {
-                    if (indoorViewEnabled) { // hide indoor view as already shown
+                if (isMapInitialised) {
+                    if (isIndoorViewEnabled) { // hide indoor view as already shown
                         mapManager.hideIndoorView();
-                        indoorViewEnabled = false;
+                        isIndoorViewEnabled = false;
 
                         // hide floor up/down buttons and text as indoor view disabled
                         floorUpButton.setVisibility(View.GONE);
@@ -281,7 +290,7 @@ public class RecordingFragment extends Fragment {
                     }
                     else { // show indoor view as already hidden
                         mapManager.showIndoorView();
-                        indoorViewEnabled = true;
+                        isIndoorViewEnabled = true;
 
                         // show floor view buttons and text as indoor view enabled
                         updateIndoorViewButtons();
@@ -297,7 +306,7 @@ public class RecordingFragment extends Fragment {
         this.floorUpButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (mapInitialised) {
+                if (isMapInitialised) {
                     mapManager.showNextIndoorView();
                     // viewed floor changed thus need to update floor view buttons
                     updateIndoorViewButtons();
@@ -312,7 +321,7 @@ public class RecordingFragment extends Fragment {
         this.floorDownButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (mapInitialised) {
+                if (isMapInitialised) {
                     mapManager.showPrevIndoorView();
                     // viewed floor changed thus need to update floor view buttons
                     updateIndoorViewButtons();
@@ -325,14 +334,14 @@ public class RecordingFragment extends Fragment {
         this.polyBuildingButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (mapInitialised) {
-                    if (polyViewEnabled){
+                if (isMapInitialised) {
+                    if (isPolyViewEnabled){
                         mapManager.hideBuildingPolygons();
-                        polyViewEnabled = false;
+                        isPolyViewEnabled = false;
                     }
                     else {
                         mapManager.showBuildingPolygons();
-                        polyViewEnabled = true;
+                        isPolyViewEnabled = true;
                     }
                 };
             }
@@ -437,7 +446,7 @@ public class RecordingFragment extends Fragment {
             currentGNSSLng.setText(getString(R.string.currentGNSSLng, gnssLatLong[1]));
 
             // only update is map is initialised
-            if (mapInitialised) {
+            if (isMapInitialised) {
                 mapManager.updateMarker(yDist, xDist, compassRotation); // update map marker using calculated movement distances
                 mapManager.updateViewableIndoorViews(); // update currently available indoor views
                 // update estimated GNSS text
@@ -447,7 +456,7 @@ public class RecordingFragment extends Fragment {
                 if (!mapManager.isIndoorViewViewable()) {
                     // hide indoor view button and indoor view if no indoor views available
                     mapManager.hideIndoorView();
-                    indoorViewEnabled = false;
+                    isIndoorViewEnabled = false;
                     indoorToggleButton.setVisibility(View.GONE);
                     floorUpButton.setVisibility(View.GONE);
                     floorDownButton.setVisibility(View.GONE);
@@ -456,7 +465,7 @@ public class RecordingFragment extends Fragment {
                     // show indoor view button as an indoor view as indoor view available
                     indoorToggleButton.setVisibility(View.VISIBLE);
                     // update floor view buttons and text when indoor view has been enabled
-                    if (indoorViewEnabled) {
+                    if (isIndoorViewEnabled) {
                         updateIndoorViewButtons();
                         updateIndoorViewText();
                     }

@@ -46,7 +46,6 @@ public class MapManager {
 
     // config variables
     private static final float zoom = 19f; // map zoom
-    private boolean normalMap; // bool to control whether satellite or normal map is used
 
     public MapManager(GoogleMap mMap, float initialPosLat, float initialPosLong, Drawable markerDrawable, int markerColor, int lineColor, int polyColor) {
         // initialise googleMap
@@ -55,7 +54,6 @@ public class MapManager {
 
         // set initial map to satellite mode
         googleMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
-        normalMap = false;
 
         // indoor map setup
         // initialised indoor view lists and poly list
@@ -177,14 +175,12 @@ public class MapManager {
         pathLine.setPoints(pathCordList);
     }
 
-    public void toggleMapMode() {
-        if (normalMap) { // change to satellite from normal map view
-            googleMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
-            normalMap = false;
-        } else { // change to normal from satellite map view
-            googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-            normalMap = true;
-        }
+    public void showSatelliteMap() {
+        googleMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+    }
+
+    public void showNormalMap() {
+        googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
     }
 
     public void showBuildingPolygons() {
