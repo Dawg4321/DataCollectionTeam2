@@ -22,6 +22,52 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
+            <androidx.cardview.widget.CardView
+                android:id="@+id/currentPositionCard"
+                android:layout_width="165dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginBottom="24dp"
+                app:cardBackgroundColor="@color/pastelBlue"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="8dp"
+                app:layout_constraintBottom_toTopOf="@+id/cancelButton"
+                app:layout_constraintStart_toStartOf="parent">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/currentGNSSLat"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="GNSS Lat: -55.9228085"
+                        android:textColor="@color/LightYellow"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:id="@+id/currentGNSSLng"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="GNSS Lon: -55.9228085"
+                        android:textColor="@color/LightYellow"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
             <Button
                 android:id="@+id/stopButton"
                 android:layout_width="150dp"
@@ -72,9 +118,9 @@
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="10dp"
                 android:src="@drawable/ic_baseline_navigation_24"
-                app:tint="@color/pastelBlue"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/elevatorImage" />
+                app:layout_constraintTop_toBottomOf="@+id/currentPositionCard"
+                app:tint="@color/pastelBlue" />
 
             <ImageView
                 android:id="@+id/elevatorImage"
@@ -85,14 +131,138 @@
                 android:elevation="2dp"
                 android:src="@drawable/ic_baseline_elevator_24"
                 app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/compass" />
+
+            <TextView
+                android:id="@+id/indoorViewText"
+                android:layout_width="290dp"
+                android:layout_height="26dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="24dp"
+                android:gravity="end"
+                android:text="@string/indoorViewText"
+                android:textColor="@color/darkLogoBlue"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/currentPositionCard" />
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/currentPositionCard"
+                android:layout_width="165dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginBottom="72dp"
+                app:cardBackgroundColor="@color/pastelBlue"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="8dp"
+                app:layout_constraintBottom_toTopOf="@+id/cancelButton"
+                app:layout_constraintStart_toStartOf="parent">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/currentEstLat"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="Est. Lat: -55.9228085"
+                        android:textColor="@color/LightYellow"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:id="@+id/currentEstLng"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="Est. Lon: -55.9228085"
+                        android:textColor="@color/LightYellow"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <Button
+                android:id="@+id/mapToggleButton"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="24dp"
+                android:background="@drawable/round_button"
+                app:icon="@drawable/baseline_map_24"
+                app:iconSize="40dp"
+                app:layout_constraintBottom_toTopOf="@+id/stopButton"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+            <Button
+                android:id="@+id/indoorToggleButton"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/round_button"
+                app:icon="@drawable/baseline_domain_24"
+                app:iconSize="40dp"
+                app:layout_constraintBottom_toTopOf="@+id/mapToggleButton"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+            <Button
+                android:id="@+id/polyBuildingButton"
+                android:layout_width="55dp"
+                android:layout_height="55dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginBottom="128dp"
+                android:background="@drawable/round_button"
+                app:icon="@drawable/baseline_polyline_24"
+                app:iconSize="25dp"
+                app:layout_constraintBottom_toTopOf="@+id/cancelButton"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/floorUpButton"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:layout_marginTop="64dp"
+                android:layout_marginEnd="12dp"
+                android:background="@android:color/transparent"
+                app:icon="@drawable/baseline_keyboard_double_arrow_up_24"
+                app:iconGravity="textStart"
+                app:iconSize="80dp"
+                app:iconTint="@color/darkLogoBlue"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/indoorViewText" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/floorDownButton"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:layout_marginTop="150dp"
+                android:layout_marginEnd="12dp"
+                android:background="@android:color/transparent"
+                app:icon="@drawable/baseline_keyboard_double_arrow_down_24"
+                app:iconGravity="textStart"
+                app:iconSize="80dp"
+                app:iconTint="@color/darkLogoBlue"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/indoorViewText" />
 
             <androidx.cardview.widget.CardView
                 android:id="@+id/currentPositionCard"
                 android:layout_width="380dp"
                 android:layout_height="30dp"
                 android:layout_marginStart="8dp"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="16dp"
                 android:layout_marginEnd="8dp"
                 app:cardBackgroundColor="@color/pastelBlue"
                 app:cardCornerRadius="20dp"
@@ -189,27 +359,9 @@
 
                     </androidx.constraintlayout.widget.ConstraintLayout>
 
-                    <androidx.constraintlayout.widget.ConstraintLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent">
-
-                    </androidx.constraintlayout.widget.ConstraintLayout>
-
                 </LinearLayout>
 
             </androidx.cardview.widget.CardView>
-
-            <Button
-                android:id="@+id/mapToggleButton"
-                android:layout_width="70dp"
-                android:layout_height="70dp"
-                android:layout_marginEnd="16dp"
-                android:layout_marginBottom="24dp"
-                android:background="@drawable/round_button"
-                app:icon="@drawable/baseline_map_24"
-                app:iconSize="40dp"
-                app:layout_constraintBottom_toTopOf="@+id/stopButton"
-                app:layout_constraintEnd_toEndOf="parent" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </FrameLayout>

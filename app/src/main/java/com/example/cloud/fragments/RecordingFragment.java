@@ -2,8 +2,6 @@ package com.example.cloud.fragments;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -32,12 +30,9 @@ import com.example.cloud.MapManager;
 import com.example.cloud.R;
 import com.example.cloud.sensors.SensorFusion;
 import com.example.cloud.sensors.SensorTypes;
-import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.LatLng;
 
 /**
  * A simple {@link Fragment} subclass. The recording fragment is displayed while the app is actively
@@ -48,6 +43,7 @@ import com.google.android.gms.maps.model.LatLng;
  * @see SensorFusion the class containing sensors and recording.
  *
  * @author Mate Stodulka
+ * @author Ryan Wiebe
  */
 public class RecordingFragment extends Fragment {
 
@@ -56,6 +52,14 @@ public class RecordingFragment extends Fragment {
     private Button cancelButton;
     //Button to toggle map type
     private Button mapToggleButton;
+    // Button to toggle ability to see indoors
+    private Button indoorToggleButton;
+    // Button to see next floor in building
+    private Button floorUpButton;
+    // Button to see previous floor in building
+    private Button floorDownButton;
+    // Button to toggle poly outline of available buildings
+    private Button polyBuildingButton;
     //Recording icon to show user recording is in progress
     private ImageView recIcon;
     //Compass icon to show user direction of heading
@@ -64,11 +68,16 @@ public class RecordingFragment extends Fragment {
     private ImageView elevatorIcon;
     //Loading bar to show time remaining before recording automatically ends
     private ProgressBar timeRemaining;
-    //Text views to display user position and elevation since beginning of recording
+    //Text views to display indoor view, long/lat, user position and elevation since beginning of recording
     private TextView positionX;
     private TextView positionY;
     private TextView elevation;
     private TextView distanceTravelled;
+    private TextView currentEstLat;
+    private TextView currentEstLng;
+    private TextView currentGNSSLat;
+    private TextView currentGNSSLng;
+    private TextView indoorViewText;
 
     //App settings
     private SharedPreferences settings;
@@ -86,7 +95,10 @@ public class RecordingFragment extends Fragment {
 
     // Google maps
     MapManager mapManager; // object used to manage google maps and marker
-    private boolean map_initialised;
+    private boolean isMapInitialised; // bool to determine whether google map is done initialising
+    private boolean isIndoorViewEnabled; // bool to control whether indoor building views are visible
+    private boolean isPolyViewEnabled; // bool to control whether poly of available buildings is visible
+    private boolean isNormalMap; // bool to control whether satellite or normal map is displayed
 
     /**
      * Public Constructor for the class.
@@ -110,12 +122,16 @@ public class RecordingFragment extends Fragment {
         this.settings = PreferenceManager.getDefaultSharedPreferences(context);
         this.refreshDataHandler = new Handler();
 
-        map_initialised = false; // set map initialised to false until map is ready
+        isMapInitialised = false; // set map initialised to false until map is ready
+        isIndoorViewEnabled = false; // set indoor view to disabled until inside a boundary
+        isPolyViewEnabled = false; // disable polyViewButton until map is ready
+        isNormalMap = false; // disable map view changes until map is ready
     }
 
     /**
      * {@inheritDoc}
-     * Set title in action bar to "Recording"
+     * Set title in action bar to "Recording". Initialise {@link SupportMapFragment} with google map.
+     * Once ready, a {@link MapManager} object will be initiliazed with the created {@link GoogleMap} object.
      */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -127,7 +143,7 @@ public class RecordingFragment extends Fragment {
         getActivity().setTitle("Recording...");
 
         // Initialize map fragment
-        SupportMapFragment supportMapFragment= (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.recordingMap);
+        SupportMapFragment supportMapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.recordingMap);
 
         supportMapFragment.getMapAsync(new OnMapReadyCallback() {
             /**
@@ -149,9 +165,10 @@ public class RecordingFragment extends Fragment {
                 mapManager = new MapManager(mMap, startPosition[0], startPosition[1],
                                 markerDrawable,
                                 ContextCompat.getColor(getContext(), R.color.pastelBlue),
-                                ContextCompat.getColor(getContext(), R.color.goldYellow));
+                                ContextCompat.getColor(getContext(), R.color.goldYellow),
+                                ContextCompat.getColor(getContext(), R.color.lightLogoBlue));
 
-                map_initialised = true;
+                isMapInitialised = true;
             }
         });
 
@@ -178,12 +195,25 @@ public class RecordingFragment extends Fragment {
         this.distanceTravelled = getView().findViewById(R.id.currentDistanceTraveled);
         this.compassIcon = getView().findViewById(R.id.compass);
         this.elevatorIcon = getView().findViewById(R.id.elevatorImage);
+        this.currentEstLat = getView().findViewById(R.id.currentEstLat);
+        this.currentEstLng = getView().findViewById(R.id.currentEstLng);
+        this.currentGNSSLat = getView().findViewById(R.id.currentGNSSLat);
+        this.currentGNSSLng = getView().findViewById(R.id.currentGNSSLng);
+        this.indoorViewText = getView().findViewById(R.id.indoorViewText);
 
         //Set default text of TextViews to 0
         this.positionX.setText(getString(R.string.x, "0"));
         this.positionY.setText(getString(R.string.y, "0"));
         this.positionY.setText(getString(R.string.elevation, "0"));
         this.distanceTravelled.setText(getString(R.string.meter, "0"));
+        this.currentEstLat.setText(getString(R.string.currentEstLat, 0.0f));
+        this.currentEstLng.setText(getString(R.string.currentEstLat, 0.0f));
+        this.currentGNSSLat.setText(getString(R.string.currentEstLat, 0.0f));
+        this.currentGNSSLng.setText(getString(R.string.currentEstLat, 0.0f));
+
+        // Set default text of indoorViewMapText Textview to Unknown
+        this.indoorViewText.setText(getString(R.string.indoorViewText, "Unknown"));
+        this.indoorViewText.setVisibility(View.GONE); // hide indoorViewText until indoorView enabled
 
         //Reset variables to 0
         this.distance = 0f;
@@ -228,10 +258,127 @@ public class RecordingFragment extends Fragment {
         // mapToggleButton to toggle map view between normal and satellite
         this.mapToggleButton = getView().findViewById(R.id.mapToggleButton);
         this.mapToggleButton.setOnClickListener(new View.OnClickListener() {
+            /**
+             * {@inheritDoc}
+             * OnClick listener for button to swap between normal and satellite map modes.
+             * When clicked, the button's state is updated and {@link SupportMapFragment} is updated
+             * using {@link MapManager}.
+             */
             @Override
             public void onClick(View view) {
-                if (map_initialised) {
-                    mapManager.toggleMapMode();
+                if (isMapInitialised) {
+                    if (isNormalMap) {
+                        mapManager.showSatelliteMap();
+                        isNormalMap = false;
+                    }
+                    else {
+                        mapManager.showNormalMap();
+                        isNormalMap = true;
+                    }
+                };
+            }
+        });
+
+        // buildingToggleButton to toggle whether to use indoor buildings
+        this.indoorToggleButton = getView().findViewById(R.id.indoorToggleButton);
+        this.indoorToggleButton.setVisibility(View.GONE); // keep button invisible until an indoor view is available
+        this.indoorToggleButton.setOnClickListener(new View.OnClickListener() {
+            /**
+             * {@inheritDoc}
+             * OnClick listener for button to show/hide indoor views
+             * When clicked, the button's state is updated, the {@link TextView} for the current indoor view is
+             * displayed/hidden, the floor up/down buttons are displayed/hidden and the current indoor view is displayed/hidden
+             * on the recording {@link SupportMapFragment} using {@link com.google.android.gms.maps.model.GroundOverlay}
+             * objects inside {@link MapManager}.
+             */
+            @Override
+            public void onClick(View view) {
+                if (isMapInitialised) {
+                    if (isIndoorViewEnabled) { // hide indoor view as already shown
+                        mapManager.hideIndoorView();
+                        isIndoorViewEnabled = false;
+
+                        // hide floor up/down buttons and text as indoor view disabled
+                        floorUpButton.setVisibility(View.GONE);
+                        floorDownButton.setVisibility(View.GONE);
+                        indoorViewText.setVisibility(View.GONE);
+                    }
+                    else { // show indoor view as already hidden
+                        mapManager.showIndoorView();
+                        isIndoorViewEnabled = true;
+
+                        // show floor view buttons and text as indoor view enabled
+                        updateIndoorViewButtons();
+                        updateIndoorViewText();
+                    }
+                };
+            }
+        });
+
+        // floorUpButton to see next floor in building
+        this.floorUpButton = getView().findViewById(R.id.floorUpButton);
+        this.floorUpButton.setVisibility(View.GONE); // keep button invisible until an indoor view is available
+        this.floorUpButton.setOnClickListener(new View.OnClickListener() {
+            /**
+             * {@inheritDoc}
+             * OnClick listener for button to show indoor view above the current indoor view.
+             * When clicked, the next indoor is displayed on the recording {@link SupportMapFragment}
+             * using {@link com.google.android.gms.maps.model.GroundOverlay} objects inside {@link MapManager}.
+             * This button is only displayed when a view above is available.
+             */
+            @Override
+            public void onClick(View view) {
+                if (isMapInitialised) {
+                    mapManager.showNextIndoorView();
+                    // viewed floor changed thus need to update floor view buttons
+                    updateIndoorViewButtons();
+                    updateIndoorViewText();
+                };
+            }
+        });
+
+        // floorDownButton to see next floor in building
+        this.floorDownButton = getView().findViewById(R.id.floorDownButton);
+        this.floorDownButton.setVisibility(View.GONE); // keep button invisible until an indoor view is available
+        this.floorDownButton.setOnClickListener(new View.OnClickListener() {
+            /**
+             * {@inheritDoc}
+             * OnClick listener for button to show indoor view above the below indoor view.
+             * When clicked, the previous indoor is displayed on the recording {@link SupportMapFragment}
+             * using {@link com.google.android.gms.maps.model.GroundOverlay} objects inside {@link MapManager}.
+             * This button is only displayed when a view below is available.
+             */
+            @Override
+            public void onClick(View view) {
+                if (isMapInitialised) {
+                    mapManager.showPrevIndoorView();
+                    // viewed floor changed thus need to update floor view buttons
+                    updateIndoorViewButtons();
+                };
+            }
+        });
+
+        // polyBuildingButton to toggle polygon outline of available buildings
+        this.polyBuildingButton = getView().findViewById(R.id.polyBuildingButton);
+        this.polyBuildingButton.setOnClickListener(new View.OnClickListener() {
+            /**
+             * {@inheritDoc}
+             * OnClick listener for button to show/hide polygons outlining buidlings.
+             * When clicked, the button's state is updated and the polygons for each building are shown/hidden
+             * on the recording {@link SupportMapFragment} using {@link com.google.android.gms.maps.model.GroundOverlay}
+             * objects inside {@link MapManager}.
+             */
+            @Override
+            public void onClick(View view) {
+                if (isMapInitialised) {
+                    if (isPolyViewEnabled){
+                        mapManager.hideBuildingPolygons();
+                        isPolyViewEnabled = false;
+                    }
+                    else {
+                        mapManager.showBuildingPolygons();
+                        isPolyViewEnabled = true;
+                    }
                 };
             }
         });
@@ -326,18 +473,73 @@ public class RecordingFragment extends Fragment {
             else elevatorIcon.setVisibility(View.GONE);
 
             //Rotate compass image to heading angle
-            float compassRotation = (float) -Math.toDegrees(sensorFusion.passOrientation());
+            float compassRotation = (float) Math.toDegrees(sensorFusion.passOrientation());
             compassIcon.setRotation(compassRotation);
 
-            // update marker position on map if map is initialised
-            if (map_initialised) {
-                mapManager.updateMarker(yDist, xDist, compassRotation); // update map marker using calculated long/lat distances
+            // update current GNSS text
+            float[] gnssLatLong = sensorFusion.getGNSSLatitude(false);
+            currentGNSSLat.setText(getString(R.string.currentGNSSLat, gnssLatLong[0]));
+            currentGNSSLng.setText(getString(R.string.currentGNSSLng, gnssLatLong[1]));
+
+            // only update is map is initialised
+            if (isMapInitialised) {
+                mapManager.updateMarker(yDist, xDist, compassRotation); // update map marker using calculated movement distances
+                mapManager.updateViewableIndoorViews(); // update currently available indoor views
+                // update estimated GNSS text
+                float[] estLatLong = mapManager.getEstimatedLatLng();
+                currentEstLat.setText(getString(R.string.currentEstLat, estLatLong[0]));
+                currentEstLng.setText(getString(R.string.currentEstLng, estLatLong[1]));
+                if (!mapManager.isIndoorViewViewable()) {
+                    // hide indoor view button and indoor view if no indoor views available
+                    mapManager.hideIndoorView();
+                    isIndoorViewEnabled = false;
+                    indoorToggleButton.setVisibility(View.GONE);
+                    floorUpButton.setVisibility(View.GONE);
+                    floorDownButton.setVisibility(View.GONE);
+                }
+                else {
+                    // show indoor view button as an indoor view as indoor view available
+                    indoorToggleButton.setVisibility(View.VISIBLE);
+                    // update floor view buttons and text when indoor view has been enabled
+                    if (isIndoorViewEnabled) {
+                        updateIndoorViewButtons();
+                        updateIndoorViewText();
+                    }
+                }
             }
 
             // Loop the task again to keep refreshing the data
             refreshDataHandler.postDelayed(refreshDataTask, 500);
         }
     };
+
+
+    /**
+     * Function to manage state of floor view up and floor down buttons. Up/down buttons should only be visible
+     * when there is a indoor view above/below the current indoor view.
+     */
+    private void updateIndoorViewButtons() {
+        // show/hide floorUpButton as floors above based on current view availability
+        if (mapManager.isNextIndoorView()) {
+            floorUpButton.setVisibility(View.VISIBLE);
+        } else {
+            floorUpButton.setVisibility(View.GONE);
+        }
+        // show/hide floorDownButton as floors below based on current view availability
+        if (mapManager.isPrevIndoorView()) {
+            floorDownButton.setVisibility(View.VISIBLE);
+        } else {
+            floorDownButton.setVisibility(View.GONE);
+        }
+    }
+    /**
+     * Function which updates the indoor view {@link TextView} with the ID associated with the currenlty
+     * visible indoor view.
+     */
+    private void updateIndoorViewText() {
+        this.indoorViewText.setVisibility(View.VISIBLE);
+        this.indoorViewText.setText(getString(R.string.indoorViewText, mapManager.getIndoorViewID()));
+    }
 
     /**
      * Displays a blinking red dot to signify an ongoing recording.
