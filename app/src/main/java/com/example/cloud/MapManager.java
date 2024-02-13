@@ -3,7 +3,6 @@ package com.example.cloud;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
-import android.util.Log;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -22,6 +21,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * A class used to manage live position and indoor building views of a {@link GoogleMap} object.
+ *
+ * Key features include tracking/updating current position and trail on map,
+ * displaying satellite and normal map views, showing/hiding indoorViews, detecting if a location
+ * is inside an indoorView, and showing/hiding building polygons on map.
+ *
+ * This class is generally stateless and should have it's state handled by another layer. One exception to this
+ * is that it tracks all available {@link IndoorView}s and displays a currently selected {@link IndoorView}.
+ * @see com.example.cloud.fragments.RecordingFragment for usage with states.
+ *
+ * @author Ryan Wiebe
+ */
 public class MapManager {
     // Google maps objects
     private GoogleMap googleMap;
@@ -47,7 +59,23 @@ public class MapManager {
     // config variables
     private static final float zoom = 19f; // map zoom
 
-    public MapManager(GoogleMap mMap, float initialPosLat, float initialPosLong, Drawable markerDrawable, int markerColor, int lineColor, int polyColor) {
+    /**
+     * MapManager constructor.
+     *
+     * This firsts initialised google map. Hardcoded maps in the form of {@link IndoorView} objects are then loaded ]
+     * and initialised as a {@link GroundOverlay} object on the map. The position marker and trail are then initialised
+     * and loaded onto the map in the form of {@link Marker} and {@link Polyline} objects.
+     *
+     *
+     * @param mMap    {@link GoogleMap} object to manage.
+     * @param initialPosLat initial latitude position to use for location.
+     * @param initialPosLng initial longitude position to use for location.
+     * @param markerDrawable drawable vector to use to mark the current position on the map.
+     * @param markerColor RGB color code for the position marker
+     * @param lineColor RGB color code for the line used to mark the path taken.
+     * @param polyColor RGB color code for the building polygons on the map
+     */
+    public MapManager(GoogleMap mMap, float initialPosLat, float initialPosLng, Drawable markerDrawable, int markerColor, int lineColor, int polyColor) {
         // initialise googleMap
         googleMap = mMap;
         googleMap.getUiSettings().setScrollGesturesEnabled(true); // enable scroll gesture so other parts of map can be viewed while recording
@@ -70,7 +98,7 @@ public class MapManager {
 
         // ensure current position is a known initial value
         currentLatPosition = initialPosLat;
-        currentLongPosition = initialPosLong;
+        currentLongPosition = initialPosLng;
 
         // initialising position marker
         // create bitmap of icon from drawables
@@ -96,6 +124,12 @@ public class MapManager {
         googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentLatPosition,currentLongPosition), zoom));
     }
 
+    /**
+     * Generates and returns a list of hardcoded {@link indoorView}s while also adding corresponding building {@link Polygon}s to the map
+     *
+     * @param polyColor Color to use for the building polygons on the map
+     * @return {@link List<IndoorView>} containing all hardcoded {@link indoorViews}
+     */
     public List<IndoorView> loadIndoorViews(int polyColor){
         List<IndoorView> hardcodedIndoorViews = new ArrayList<IndoorView>();
 
@@ -155,6 +189,12 @@ public class MapManager {
         return hardcodedIndoorViews;
     }
 
+    /**
+     * Updates the current position marker to a newly calculated position using a latitude and longitude distance offset.
+     *
+     * @param latDist new latitude distance offset in meters
+     * @param latDist new longitude distance offset in meters
+     */
     public void updateMarker(float latDist, float longDist, float markerRotation) {
         // store last marker position
         float previousLatPosition = currentLatPosition;
@@ -175,27 +215,42 @@ public class MapManager {
         pathLine.setPoints(pathCordList);
     }
 
+    /**
+     * Sets the current {@link GoogleMap} map type to satellite.
+     */
     public void showSatelliteMap() {
         googleMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
     }
 
+    /**
+     * Sets the current {@link GoogleMap} map type to normal.
+     */
     public void showNormalMap() {
         googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
     }
 
+    /**
+     * Displays all building polygons on the {@link GoogleMap}.
+     */
     public void showBuildingPolygons() {
         for (Polygon poly: buildingPolys) {
             poly.setVisible(true);
         }
     }
 
+    /**
+     * Hides all building polygons on the {@link GoogleMap}.
+     */
     public void hideBuildingPolygons() {
         for (Polygon poly: buildingPolys) {
             poly.setVisible(false);
         }
     }
 
-
+    /**
+     * Using the current location, determines which {@link IndoorView}s are available for viewing.
+     * If the currently viewed {@link IndoorView} is no longer visible after update, use the next available view.
+     */
     public void updateViewableIndoorViews() {
 
         // updating currently viewable indoor views
@@ -226,6 +281,9 @@ public class MapManager {
         }
     }
 
+    /**
+     * Show the next {@link IndoorView} on the {@link GoogleMap} if available.
+     */
     public void showNextIndoorView() {
         int viewIdx = viewableIndoorViews.indexOf(currentIndoorView);
         if (viewIdx + 1 < viewableIndoorViews.size()) {
@@ -234,6 +292,9 @@ public class MapManager {
         updateCurrentIndoorView(currentIndoorView);
     }
 
+    /**
+     * Show the previous {@link IndoorView} on the {@link GoogleMap} if available.
+     */
     public void showPrevIndoorView() {
         int viewIdx = viewableIndoorViews.indexOf(currentIndoorView);
         if (viewIdx - 1 >= 0) {
@@ -242,6 +303,11 @@ public class MapManager {
         updateCurrentIndoorView(currentIndoorView);
     }
 
+    /**
+     * Determines if there is a next {@link IndoorView} available.
+     *
+     * @return True if an {@link IndoorView} is available next, false otherwise.
+     */
     public boolean isNextIndoorView() {
         int viewIdx = viewableIndoorViews.indexOf(currentIndoorView);
         if (viewIdx + 1 < viewableIndoorViews.size()) {
@@ -250,6 +316,11 @@ public class MapManager {
         return false;
     }
 
+    /**
+     * Determines if there is a previous {@link IndoorView} available.
+     *
+     * @return True if an {@link IndoorView} is available previously, false otherwise.
+     */
     public boolean isPrevIndoorView() {
         int viewIdx = viewableIndoorViews.indexOf(currentIndoorView);
         if (viewIdx - 1 >= 0) {
@@ -258,19 +329,47 @@ public class MapManager {
         return false;
     }
 
+    /**
+     * Determines if there are any available {@link IndoorView}s to view.
+     *
+     * @return True if an {@link IndoorView} is available for viewing, false otherwise.
+     */
     public boolean isIndoorViewViewable() {
         return viewableIndoorViews.size() > 0;
     }
 
+    /**
+     * Gets the ID associated with the currently viewed {@link IndoorView}
+     *
+     * @return string containing the {@link IndoorView} ID.
+     */
     public String getIndoorViewID() { return currentIndoorView.getID(); }
 
-    public float[] getEstimatedGNSS() { return new float[] {currentLatPosition, currentLongPosition}; }
+    /**
+     * Gets the currently estimated latitude and longitude position.
+     *
+     * @return Current latitude and longitude position estimate.
+     */
+    public float[] getEstimatedLatLng() { return new float[] {currentLatPosition, currentLongPosition}; }
 
+    /**
+     * Hides the currently selected {@link IndoorView} using a {@link GroundOverlay}.
+     */
+    public void hideIndoorView() { indoorViewOverlay.setVisible(false); }
+
+    /**
+     * Shows the currently selected {@link IndoorView} using a {@link GroundOverlay}.
+     */
+    public void showIndoorView() { indoorViewOverlay.setVisible(true); }
+
+    /**
+     * Updates the currently displayed {@link IndoorView} on the {@link GoogleMap}.
+     *
+     * @param view  The view to now display as a {@link GroundOverlay}.
+     */
     private void updateCurrentIndoorView(IndoorView view) {
         indoorViewOverlay.setPositionFromBounds(view.getViewBounds());
         indoorViewOverlay.setImage(view.getBitMap());
     }
-    
-    public void hideIndoorView() { indoorViewOverlay.setVisible(false); }
-    public void showIndoorView() { indoorViewOverlay.setVisible(true); }
+
 }

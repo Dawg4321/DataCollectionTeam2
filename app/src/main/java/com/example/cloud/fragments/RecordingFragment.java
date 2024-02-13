@@ -43,6 +43,7 @@ import com.google.android.gms.maps.SupportMapFragment;
  * @see SensorFusion the class containing sensors and recording.
  *
  * @author Mate Stodulka
+ * @author Ryan Wiebe
  */
 public class RecordingFragment extends Fragment {
 
@@ -129,7 +130,8 @@ public class RecordingFragment extends Fragment {
 
     /**
      * {@inheritDoc}
-     * Set title in action bar to "Recording"
+     * Set title in action bar to "Recording". Initialise {@link SupportMapFragment} with google map.
+     * Once ready, a {@link MapManager} object will be initiliazed with the created {@link GoogleMap} object.
      */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -254,9 +256,14 @@ public class RecordingFragment extends Fragment {
         });
 
         // mapToggleButton to toggle map view between normal and satellite
-        isPolyViewEnabled = false;
         this.mapToggleButton = getView().findViewById(R.id.mapToggleButton);
         this.mapToggleButton.setOnClickListener(new View.OnClickListener() {
+            /**
+             * {@inheritDoc}
+             * OnClick listener for button to swap between normal and satellite map modes.
+             * When clicked, the button's state is updated and {@link SupportMapFragment} is updated
+             * using {@link MapManager}.
+             */
             @Override
             public void onClick(View view) {
                 if (isMapInitialised) {
@@ -276,6 +283,14 @@ public class RecordingFragment extends Fragment {
         this.indoorToggleButton = getView().findViewById(R.id.indoorToggleButton);
         this.indoorToggleButton.setVisibility(View.GONE); // keep button invisible until an indoor view is available
         this.indoorToggleButton.setOnClickListener(new View.OnClickListener() {
+            /**
+             * {@inheritDoc}
+             * OnClick listener for button to show/hide indoor views
+             * When clicked, the button's state is updated, the {@link TextView} for the current indoor view is
+             * displayed/hidden, the floor up/down buttons are displayed/hidden and the current indoor view is displayed/hidden
+             * on the recording {@link SupportMapFragment} using {@link com.google.android.gms.maps.model.GroundOverlay}
+             * objects inside {@link MapManager}.
+             */
             @Override
             public void onClick(View view) {
                 if (isMapInitialised) {
@@ -304,6 +319,13 @@ public class RecordingFragment extends Fragment {
         this.floorUpButton = getView().findViewById(R.id.floorUpButton);
         this.floorUpButton.setVisibility(View.GONE); // keep button invisible until an indoor view is available
         this.floorUpButton.setOnClickListener(new View.OnClickListener() {
+            /**
+             * {@inheritDoc}
+             * OnClick listener for button to show indoor view above the current indoor view.
+             * When clicked, the next indoor is displayed on the recording {@link SupportMapFragment}
+             * using {@link com.google.android.gms.maps.model.GroundOverlay} objects inside {@link MapManager}.
+             * This button is only displayed when a view above is available.
+             */
             @Override
             public void onClick(View view) {
                 if (isMapInitialised) {
@@ -319,6 +341,13 @@ public class RecordingFragment extends Fragment {
         this.floorDownButton = getView().findViewById(R.id.floorDownButton);
         this.floorDownButton.setVisibility(View.GONE); // keep button invisible until an indoor view is available
         this.floorDownButton.setOnClickListener(new View.OnClickListener() {
+            /**
+             * {@inheritDoc}
+             * OnClick listener for button to show indoor view above the below indoor view.
+             * When clicked, the previous indoor is displayed on the recording {@link SupportMapFragment}
+             * using {@link com.google.android.gms.maps.model.GroundOverlay} objects inside {@link MapManager}.
+             * This button is only displayed when a view below is available.
+             */
             @Override
             public void onClick(View view) {
                 if (isMapInitialised) {
@@ -332,6 +361,13 @@ public class RecordingFragment extends Fragment {
         // polyBuildingButton to toggle polygon outline of available buildings
         this.polyBuildingButton = getView().findViewById(R.id.polyBuildingButton);
         this.polyBuildingButton.setOnClickListener(new View.OnClickListener() {
+            /**
+             * {@inheritDoc}
+             * OnClick listener for button to show/hide polygons outlining buidlings.
+             * When clicked, the button's state is updated and the polygons for each building are shown/hidden
+             * on the recording {@link SupportMapFragment} using {@link com.google.android.gms.maps.model.GroundOverlay}
+             * objects inside {@link MapManager}.
+             */
             @Override
             public void onClick(View view) {
                 if (isMapInitialised) {
@@ -450,7 +486,7 @@ public class RecordingFragment extends Fragment {
                 mapManager.updateMarker(yDist, xDist, compassRotation); // update map marker using calculated movement distances
                 mapManager.updateViewableIndoorViews(); // update currently available indoor views
                 // update estimated GNSS text
-                float[] estLatLong = mapManager.getEstimatedGNSS();
+                float[] estLatLong = mapManager.getEstimatedLatLng();
                 currentEstLat.setText(getString(R.string.currentEstLat, estLatLong[0]));
                 currentEstLng.setText(getString(R.string.currentEstLng, estLatLong[1]));
                 if (!mapManager.isIndoorViewViewable()) {
@@ -478,6 +514,10 @@ public class RecordingFragment extends Fragment {
     };
 
 
+    /**
+     * Function to manage state of floor view up and floor down buttons. Up/down buttons should only be visible
+     * when there is a indoor view above/below the current indoor view.
+     */
     private void updateIndoorViewButtons() {
         // show/hide floorUpButton as floors above based on current view availability
         if (mapManager.isNextIndoorView()) {
@@ -492,7 +532,10 @@ public class RecordingFragment extends Fragment {
             floorDownButton.setVisibility(View.GONE);
         }
     }
-
+    /**
+     * Function which updates the indoor view {@link TextView} with the ID associated with the currenlty
+     * visible indoor view.
+     */
     private void updateIndoorViewText() {
         this.indoorViewText.setVisibility(View.VISIBLE);
         this.indoorViewText.setText(getString(R.string.indoorViewText, mapManager.getIndoorViewID()));
