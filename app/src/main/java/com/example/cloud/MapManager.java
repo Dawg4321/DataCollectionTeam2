@@ -32,11 +32,9 @@ public class MapManager {
     private List<IndoorView> viewableIndoorViews; // list of currently available indoor views
     IndoorView currentIndoorView; // current indoor view
 
-    // current marker and previous marker positions
+    // current marker coordinates
     private float currentLongPosition;
     private float currentLatPosition;
-    private float previousLongPosition;
-    private float previousLatPosition;
 
     // constants used for calculating change in latitude and longitude
     private static final float earthRadius = 6371 * (float) Math.pow(10, 3); // earth radius per meter
@@ -71,8 +69,6 @@ public class MapManager {
         // ensure previous and current positions have a known initial value
         currentLatPosition = initialPosLat;
         currentLongPosition = initialPosLong;
-        previousLatPosition = currentLatPosition;
-        previousLongPosition = currentLongPosition;
 
         // initialising position marker
         // create bitmap of icon from drawables
@@ -126,8 +122,8 @@ public class MapManager {
 
     public void updateMarker(float latDist, float longDist, float markerRotation) {
         // store last marker position
-        previousLatPosition = currentLatPosition;
-        previousLongPosition = currentLongPosition;
+        float previousLatPosition = currentLatPosition;
+        float previousLongPosition = currentLongPosition;
 
         // calculate new marker position using travelled long and lat distances
         currentLatPosition = previousLatPosition + (latDist/metersPerLatDegree);

@@ -92,7 +92,7 @@ public class RecordingFragment extends Fragment {
 
     // Google maps
     MapManager mapManager; // object used to manage google maps and marker
-    private boolean map_initialised; // bool to determine whether google map is done initialising
+    private boolean mapInitialised; // bool to determine whether google map is done initialising
     private boolean indoorViewEnabled; // bool to control whether indoor buildings are visible
 
     /**
@@ -117,7 +117,7 @@ public class RecordingFragment extends Fragment {
         this.settings = PreferenceManager.getDefaultSharedPreferences(context);
         this.refreshDataHandler = new Handler();
 
-        map_initialised = false; // set map initialised to false until map is ready
+        mapInitialised = false; // set map initialised to false until map is ready
     }
 
     /**
@@ -158,7 +158,7 @@ public class RecordingFragment extends Fragment {
                                 ContextCompat.getColor(getContext(), R.color.pastelBlue),
                                 ContextCompat.getColor(getContext(), R.color.goldYellow));
 
-                map_initialised = true;
+                mapInitialised = true;
             }
         });
 
@@ -250,7 +250,7 @@ public class RecordingFragment extends Fragment {
         this.mapToggleButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (map_initialised) {
+                if (mapInitialised) {
                     mapManager.toggleMapMode();
                 };
             }
@@ -262,7 +262,7 @@ public class RecordingFragment extends Fragment {
         this.indoorToggleButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (map_initialised) {
+                if (mapInitialised) {
                     if (indoorViewEnabled) { // hide indoor view as already shown
                         mapManager.hideIndoorView();
                         indoorViewEnabled = false;
@@ -290,7 +290,7 @@ public class RecordingFragment extends Fragment {
         this.floorUpButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (map_initialised) {
+                if (mapInitialised) {
                     mapManager.showNextIndoorView();
                     // viewed floor changed thus need to update floor view buttons
                     updateIndoorViewButtons();
@@ -305,7 +305,7 @@ public class RecordingFragment extends Fragment {
         this.floorDownButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (map_initialised) {
+                if (mapInitialised) {
                     mapManager.showPrevIndoorView();
                     // viewed floor changed thus need to update floor view buttons
                     updateIndoorViewButtons();
@@ -407,16 +407,16 @@ public class RecordingFragment extends Fragment {
             compassIcon.setRotation(compassRotation);
 
             // update current GNSS text
-            float gnssLatLong[] = sensorFusion.getGNSSLatitude(false);
+            float[] gnssLatLong = sensorFusion.getGNSSLatitude(false);
             currentGNSSLat.setText(getString(R.string.currentGNSSLat, gnssLatLong[0]));
             currentGNSSLng.setText(getString(R.string.currentGNSSLng, gnssLatLong[1]));
 
             // only update is map is initialised
-            if (map_initialised) {
+            if (mapInitialised) {
                 mapManager.updateMarker(yDist, xDist, compassRotation); // update map marker using calculated movement distances
                 mapManager.updateViewableIndoorViews(); // update currently available indoor views
                 // update estimated GNSS text
-                float estLatLong[] = mapManager.getEstimatedGNSS();
+                float[] estLatLong = mapManager.getEstimatedGNSS();
                 currentEstLat.setText(getString(R.string.currentEstLat, estLatLong[0]));
                 currentEstLng.setText(getString(R.string.currentEstLng, estLatLong[1]));
                 if (!mapManager.isIndoorViewViewable()) {

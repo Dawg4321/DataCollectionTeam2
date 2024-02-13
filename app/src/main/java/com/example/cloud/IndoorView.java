@@ -9,10 +9,10 @@ import com.google.maps.android.PolyUtil;
 import java.util.List;
 
 public class IndoorView {
-    private String id;
-    private LatLngBounds indoorPosition;
-    private List<LatLng> indoorPolygon;
-    private BitmapDescriptor indoorBitmap;
+    private String id; // indoor view id to display
+    private LatLngBounds indoorPosition; // bounds used by GroundOverlay when rendering the image on the map
+    private List<LatLng> indoorPolygon; // polygon used to set view detection boundary
+    private BitmapDescriptor indoorBitmap; // bitmap used by GroundOverlay to render the image
 
     IndoorView(String id, LatLng anchorSouthWest, LatLng anchorNorthEast, List<LatLng> indoorPolygon, BitmapDescriptor indoorBitmap) {
         this.id = id;
