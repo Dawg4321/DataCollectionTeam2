@@ -97,7 +97,7 @@ public class MapManager {
     public List<IndoorView> loadIndoorViews(){
         List<IndoorView> hardcodedIndoorViews = new ArrayList<IndoorView>();
 
-        // add nucleus building
+        // add Nucleus building
         LatLng nucleusSouthEast = new LatLng(55.9227834,-3.1746385);
         LatLng nucleusNorthEast = new LatLng(55.9233976,-3.1738120);
         List<LatLng> nucleusPolygon = Arrays.asList(new LatLng(55.9227952,-3.1746006), // polygon to determine if map available
@@ -116,6 +116,24 @@ public class MapManager {
                 BitmapDescriptorFactory.fromResource(R.drawable.nucleus_f2)));
         hardcodedIndoorViews.add(new IndoorView("nucleus_3f", nucleusSouthEast, nucleusNorthEast, nucleusPolygon,
                 BitmapDescriptorFactory.fromResource(R.drawable.nucleus_f3)));
+
+        // add Noreen and Kenneth Murray library
+        LatLng librarySouthEast = new LatLng(55.9227289, -3.1751799);
+        LatLng libraryNorthEast = new LatLng(55.9230537, -3.1747692);
+        List<LatLng> libraryPolygon = Arrays.asList(new LatLng(55.9227931, -3.1751766), // polygon to determine if map available
+                new LatLng(55.9227931,-3.1747910),
+                new LatLng(55.9230569, -3.1747910),
+                new LatLng(55.9230569,-3.1751766),
+                new LatLng(55.9227931, -3.1751766));
+
+        hardcodedIndoorViews.add(new IndoorView("library_g", librarySouthEast, libraryNorthEast, libraryPolygon,
+                BitmapDescriptorFactory.fromResource(R.drawable.library_g)));
+        hardcodedIndoorViews.add(new IndoorView("library_1f", librarySouthEast, libraryNorthEast, libraryPolygon,
+                BitmapDescriptorFactory.fromResource(R.drawable.library_1f)));
+        hardcodedIndoorViews.add(new IndoorView("library_2f", librarySouthEast, libraryNorthEast, libraryPolygon,
+                BitmapDescriptorFactory.fromResource(R.drawable.library_2f)));
+        hardcodedIndoorViews.add(new IndoorView("library_3f", librarySouthEast, libraryNorthEast, libraryPolygon,
+                BitmapDescriptorFactory.fromResource(R.drawable.library_3f)));
 
         return hardcodedIndoorViews;
     }

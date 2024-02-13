@@ -422,6 +422,7 @@ public class RecordingFragment extends Fragment {
                 if (!mapManager.isIndoorViewViewable()) {
                     // hide indoor view button and indoor view if no indoor views available
                     mapManager.hideIndoorView();
+                    indoorViewEnabled = false;
                     indoorToggleButton.setVisibility(View.GONE);
                     floorUpButton.setVisibility(View.GONE);
                     floorDownButton.setVisibility(View.GONE);
