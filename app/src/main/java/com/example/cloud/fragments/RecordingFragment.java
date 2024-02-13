@@ -33,7 +33,6 @@ import com.example.cloud.sensors.SensorTypes;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.LatLng;
 
 /**
  * A simple {@link Fragment} subclass. The recording fragment is displayed while the app is actively
@@ -66,11 +65,16 @@ public class RecordingFragment extends Fragment {
     private ImageView elevatorIcon;
     //Loading bar to show time remaining before recording automatically ends
     private ProgressBar timeRemaining;
-    //Text views to display user position and elevation since beginning of recording
+    //Text views to display indoor view, long/lat, user position and elevation since beginning of recording
     private TextView positionX;
     private TextView positionY;
     private TextView elevation;
     private TextView distanceTravelled;
+    private TextView currentEstLat;
+    private TextView currentEstLng;
+    private TextView currentGNSSLat;
+    private TextView currentGNSSLng;
+    private TextView indoorViewText;
 
     //App settings
     private SharedPreferences settings;
@@ -181,12 +185,25 @@ public class RecordingFragment extends Fragment {
         this.distanceTravelled = getView().findViewById(R.id.currentDistanceTraveled);
         this.compassIcon = getView().findViewById(R.id.compass);
         this.elevatorIcon = getView().findViewById(R.id.elevatorImage);
+        this.currentEstLat = getView().findViewById(R.id.currentEstLat);
+        this.currentEstLng = getView().findViewById(R.id.currentEstLng);
+        this.currentGNSSLat = getView().findViewById(R.id.currentGNSSLat);
+        this.currentGNSSLng = getView().findViewById(R.id.currentGNSSLng);
+        this.indoorViewText = getView().findViewById(R.id.indoorViewText);
 
         //Set default text of TextViews to 0
         this.positionX.setText(getString(R.string.x, "0"));
         this.positionY.setText(getString(R.string.y, "0"));
         this.positionY.setText(getString(R.string.elevation, "0"));
         this.distanceTravelled.setText(getString(R.string.meter, "0"));
+        this.currentEstLat.setText(getString(R.string.currentEstLat, 0.0f));
+        this.currentEstLng.setText(getString(R.string.currentEstLat, 0.0f));
+        this.currentGNSSLat.setText(getString(R.string.currentEstLat, 0.0f));
+        this.currentGNSSLng.setText(getString(R.string.currentEstLat, 0.0f));
+
+        // Set default text of indoorViewMapText Textview to Unknown
+        this.indoorViewText.setText(getString(R.string.indoorViewText, "Unknown"));
+        this.indoorViewText.setVisibility(View.GONE); // hide indoorViewText until indoorView enabled
 
         //Reset variables to 0
         this.distance = 0f;
@@ -250,16 +267,18 @@ public class RecordingFragment extends Fragment {
                         mapManager.hideIndoorView();
                         indoorViewEnabled = false;
 
-                        // hide floor up/down buttons as indoor view disabled
+                        // hide floor up/down buttons and text as indoor view disabled
                         floorUpButton.setVisibility(View.GONE);
                         floorDownButton.setVisibility(View.GONE);
+                        indoorViewText.setVisibility(View.GONE);
                     }
                     else { // show indoor view as already hidden
                         mapManager.showIndoorView();
                         indoorViewEnabled = true;
 
-                        // show floor view buttons as indoor view enabled
-                        updateFloorViewButtons();
+                        // show floor view buttons and text as indoor view enabled
+                        updateIndoorViewButtons();
+                        updateIndoorViewText();
                     }
                 };
             }
@@ -274,7 +293,8 @@ public class RecordingFragment extends Fragment {
                 if (map_initialised) {
                     mapManager.showNextIndoorView();
                     // viewed floor changed thus need to update floor view buttons
-                    updateFloorViewButtons();
+                    updateIndoorViewButtons();
+                    updateIndoorViewText();
                 };
             }
         });
@@ -288,7 +308,7 @@ public class RecordingFragment extends Fragment {
                 if (map_initialised) {
                     mapManager.showPrevIndoorView();
                     // viewed floor changed thus need to update floor view buttons
-                    updateFloorViewButtons();
+                    updateIndoorViewButtons();
                 };
             }
         });
@@ -383,13 +403,22 @@ public class RecordingFragment extends Fragment {
             else elevatorIcon.setVisibility(View.GONE);
 
             //Rotate compass image to heading angle
-            float compassRotation = (float) -Math.toDegrees(sensorFusion.passOrientation());
+            float compassRotation = (float) Math.toDegrees(sensorFusion.passOrientation());
             compassIcon.setRotation(compassRotation);
+
+            // update current GNSS text
+            float gnssLatLong[] = sensorFusion.getGNSSLatitude(false);
+            currentGNSSLat.setText(getString(R.string.currentGNSSLat, gnssLatLong[0]));
+            currentGNSSLng.setText(getString(R.string.currentGNSSLng, gnssLatLong[1]));
 
             // only update is map is initialised
             if (map_initialised) {
-                mapManager.updateMarker(yDist, xDist, compassRotation); // update map marker using calculated long/lat distances
+                mapManager.updateMarker(yDist, xDist, compassRotation); // update map marker using calculated movement distances
                 mapManager.updateViewableIndoorViews(); // update currently available indoor views
+                // update estimated GNSS text
+                float estLatLong[] = mapManager.getEstimatedGNSS();
+                currentEstLat.setText(getString(R.string.currentEstLat, estLatLong[0]));
+                currentEstLng.setText(getString(R.string.currentEstLng, estLatLong[1]));
                 if (!mapManager.isIndoorViewViewable()) {
                     // hide indoor view button and indoor view if no indoor views available
                     mapManager.hideIndoorView();
@@ -400,9 +429,10 @@ public class RecordingFragment extends Fragment {
                 else {
                     // show indoor view button as an indoor view as indoor view available
                     indoorToggleButton.setVisibility(View.VISIBLE);
-                    // update floor view buttons only when indoor view has been enabled
+                    // update floor view buttons and text when indoor view has been enabled
                     if (indoorViewEnabled) {
-                        updateFloorViewButtons();
+                        updateIndoorViewButtons();
+                        updateIndoorViewText();
                     }
                 }
             }
@@ -413,7 +443,7 @@ public class RecordingFragment extends Fragment {
     };
 
 
-    private void updateFloorViewButtons() {
+    private void updateIndoorViewButtons() {
         // show/hide floorUpButton as floors above based on current view availability
         if (mapManager.isNextIndoorView()) {
             floorUpButton.setVisibility(View.VISIBLE);
@@ -427,6 +457,12 @@ public class RecordingFragment extends Fragment {
             floorDownButton.setVisibility(View.GONE);
         }
     }
+
+    private void updateIndoorViewText() {
+        this.indoorViewText.setVisibility(View.VISIBLE);
+        this.indoorViewText.setText(getString(R.string.indoorViewText, mapManager.getIndoorViewID()));
+    }
+
     /**
      * Displays a blinking red dot to signify an ongoing recording.
      *

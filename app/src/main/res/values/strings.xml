@@ -47,6 +47,12 @@
     <string name="correctStepLgn">Enter corrected length</string>
     <string name="locationInstructions">Long press and drag the marker to your start location</string>
     <string name="correctionInstructions">Zoom, scroll and rotate the map to correct the path</string>
+    <string name="indoorViewText">Map: %s</string>
+    <string name="currentEstLat">Est. Lat: %.7f</string>
+    <string name="currentEstLng">Est. Lng: %.7f</string>
+    <string name="currentGNSSLat">GNSS Lat: %.7f</string>
+    <string name="currentGNSSLng">GNSS Lng: %.7f</string>
+
 
     <!-- Sensor Info -->
     <string name="vendor">Vendor:\t\t\t\t\t\t\t %1$s</string>

@@ -102,7 +102,7 @@ public class MapManager {
         List<IndoorView> hardcodedIndoorViews = new ArrayList<IndoorView>();
 
         // add nucleus building
-        LatLng nucleusSouthEast = new LatLng(55.9227634,-3.1746006);
+        LatLng nucleusSouthEast = new LatLng(55.9227834,-3.1746385);
         LatLng nucleusNorthEast = new LatLng(55.9233976,-3.1738120);
         List<LatLng> nucleusPolygon = Arrays.asList(new LatLng(55.9227952,-3.1746006), // polygon to determine if map available
                 new LatLng(55.9227952,-3.1738120),
@@ -110,12 +110,16 @@ public class MapManager {
                 new LatLng(55.9233137,-3.1746006),
                 new LatLng(55.922795,-3.1746006));
 
-        hardcodedIndoorViews.add(new IndoorView(nucleusSouthEast, nucleusNorthEast, nucleusPolygon,
-                BitmapDescriptorFactory.fromResource(R.drawable.nucleusg)));
-        hardcodedIndoorViews.add(new IndoorView(nucleusSouthEast, nucleusNorthEast, nucleusPolygon,
-                BitmapDescriptorFactory.fromResource(R.drawable.nucleusg)));
-        hardcodedIndoorViews.add(new IndoorView(nucleusSouthEast, nucleusNorthEast, nucleusPolygon,
-                BitmapDescriptorFactory.fromResource(R.drawable.nucleusg)));
+        hardcodedIndoorViews.add(new IndoorView("nucleus_lg", nucleusSouthEast, nucleusNorthEast, nucleusPolygon,
+                BitmapDescriptorFactory.fromResource(R.drawable.nucleus_lg)));
+        hardcodedIndoorViews.add(new IndoorView("nucleus_g", nucleusSouthEast, nucleusNorthEast, nucleusPolygon,
+                BitmapDescriptorFactory.fromResource(R.drawable.nucleus_g)));
+        hardcodedIndoorViews.add(new IndoorView("nucleus_1f", nucleusSouthEast, nucleusNorthEast, nucleusPolygon,
+                BitmapDescriptorFactory.fromResource(R.drawable.nucleus_f1)));
+        hardcodedIndoorViews.add(new IndoorView("nucleus_2f", nucleusSouthEast, nucleusNorthEast, nucleusPolygon,
+                BitmapDescriptorFactory.fromResource(R.drawable.nucleus_f2)));
+        hardcodedIndoorViews.add(new IndoorView("nucleus_3f", nucleusSouthEast, nucleusNorthEast, nucleusPolygon,
+                BitmapDescriptorFactory.fromResource(R.drawable.nucleus_f3)));
 
         return hardcodedIndoorViews;
     }
@@ -215,6 +219,10 @@ public class MapManager {
     public boolean isIndoorViewViewable() {
         return viewableIndoorViews.size() > 0;
     }
+
+    public String getIndoorViewID() { return currentIndoorView.getID(); }
+
+    public float[] getEstimatedGNSS() { return new float[] {currentLatPosition, currentLongPosition}; }
 
     private void updateCurrentIndoorView(IndoorView view) {
         indoorViewOverlay.setPositionFromBounds(view.getViewBounds());

@@ -9,11 +9,13 @@ import com.google.maps.android.PolyUtil;
 import java.util.List;
 
 public class IndoorView {
+    private String id;
     private LatLngBounds indoorPosition;
     private List<LatLng> indoorPolygon;
     private BitmapDescriptor indoorBitmap;
 
-    IndoorView(LatLng anchorSouthWest, LatLng anchorNorthEast, List<LatLng> indoorPolygon, BitmapDescriptor indoorBitmap) {
+    IndoorView(String id, LatLng anchorSouthWest, LatLng anchorNorthEast, List<LatLng> indoorPolygon, BitmapDescriptor indoorBitmap) {
+        this.id = id;
         this.indoorPosition = new LatLngBounds(anchorSouthWest, anchorNorthEast);
         this.indoorPolygon = indoorPolygon;
         this.indoorBitmap = indoorBitmap;
@@ -28,4 +30,6 @@ public class IndoorView {
     }
 
     public BitmapDescriptor getBitMap() { return indoorBitmap; }
+
+    public String getID() { return id; }
 }
