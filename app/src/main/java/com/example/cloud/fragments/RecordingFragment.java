@@ -57,6 +57,8 @@ public class RecordingFragment extends Fragment {
     private Button floorUpButton;
     // Button to see previous floor in building
     private Button floorDownButton;
+    // Button to toggle poly outline of available buildings
+    private Button polyBuildingButton;
     //Recording icon to show user recording is in progress
     private ImageView recIcon;
     //Compass icon to show user direction of heading
@@ -93,7 +95,8 @@ public class RecordingFragment extends Fragment {
     // Google maps
     MapManager mapManager; // object used to manage google maps and marker
     private boolean mapInitialised; // bool to determine whether google map is done initialising
-    private boolean indoorViewEnabled; // bool to control whether indoor buildings are visible
+    private boolean indoorViewEnabled; // bool to control whether indoor building views are visible
+    private boolean polyViewEnabled; // bool to control whether poly of available buildings is visible
 
     /**
      * Public Constructor for the class.
@@ -118,6 +121,8 @@ public class RecordingFragment extends Fragment {
         this.refreshDataHandler = new Handler();
 
         mapInitialised = false; // set map initialised to false until map is ready
+        indoorViewEnabled = false; // set indoor view to disabled until inside a boundary
+        polyViewEnabled = false; // disable polyViewButton until map is ready
     }
 
     /**
@@ -156,7 +161,8 @@ public class RecordingFragment extends Fragment {
                 mapManager = new MapManager(mMap, startPosition[0], startPosition[1],
                                 markerDrawable,
                                 ContextCompat.getColor(getContext(), R.color.pastelBlue),
-                                ContextCompat.getColor(getContext(), R.color.goldYellow));
+                                ContextCompat.getColor(getContext(), R.color.goldYellow),
+                                ContextCompat.getColor(getContext(), R.color.lightLogoBlue));
 
                 mapInitialised = true;
             }
@@ -246,6 +252,7 @@ public class RecordingFragment extends Fragment {
         });
 
         // mapToggleButton to toggle map view between normal and satellite
+        polyViewEnabled = false;
         this.mapToggleButton = getView().findViewById(R.id.mapToggleButton);
         this.mapToggleButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -309,6 +316,24 @@ public class RecordingFragment extends Fragment {
                     mapManager.showPrevIndoorView();
                     // viewed floor changed thus need to update floor view buttons
                     updateIndoorViewButtons();
+                };
+            }
+        });
+
+        // polyBuildingButton to toggle polygon outline of available buildings
+        this.polyBuildingButton = getView().findViewById(R.id.polyBuildingButton);
+        this.polyBuildingButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (mapInitialised) {
+                    if (polyViewEnabled){
+                        mapManager.hideBuildingPolygons();
+                        polyViewEnabled = false;
+                    }
+                    else {
+                        mapManager.showBuildingPolygons();
+                        polyViewEnabled = true;
+                    }
                 };
             }
         });

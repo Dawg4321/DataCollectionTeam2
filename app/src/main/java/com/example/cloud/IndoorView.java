@@ -32,4 +32,6 @@ public class IndoorView {
     public BitmapDescriptor getBitMap() { return indoorBitmap; }
 
     public String getID() { return id; }
+
+    public List<LatLng> getIndoorPolygon() { return indoorPolygon; }
 }
