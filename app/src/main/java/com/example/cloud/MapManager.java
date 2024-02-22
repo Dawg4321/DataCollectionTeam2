@@ -3,6 +3,7 @@ package com.example.cloud;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -134,44 +135,140 @@ public class MapManager {
         List<IndoorView> hardcodedIndoorViews = new ArrayList<IndoorView>();
 
         // add Nucleus building
+        // map anchors
         LatLng nucleusSouthEast = new LatLng(55.9227834,-3.1746385);
         LatLng nucleusNorthEast = new LatLng(55.9233976,-3.1738120);
-        List<LatLng> nucleusPolygon = Arrays.asList(new LatLng(55.9227952,-3.1746006), // polygon to determine if map available
+
+        // building polygon to determine if map available
+        List<LatLng> nucleusPolygon = Arrays.asList(new LatLng(55.9227952,-3.1746006),
                 new LatLng(55.9227952,-3.1741111),
                 new LatLng(55.9228795,-3.1738120),
                 new LatLng(55.9233137,-3.1738120),
                 new LatLng(55.9233137,-3.1746006),
                 new LatLng(55.922795,-3.1746006));
 
-        hardcodedIndoorViews.add(new IndoorView("nucleus_lg", nucleusSouthEast, nucleusNorthEast, nucleusPolygon,
+        // approximate floor heights
+        float nucleusHeightLG = -2.5f;
+        float nucleusHeightG = 0.0f;
+        float nucleusHeight1F = 6.0f;
+        float nucleusHeight2F = 11.5f;
+        float nucleusHeight3F = 16.5f;
+
+        hardcodedIndoorViews.add(new IndoorView("nucleus_lg", nucleusSouthEast, nucleusNorthEast, nucleusPolygon, nucleusHeightLG,
                 BitmapDescriptorFactory.fromResource(R.drawable.nucleus_lg)));
-        hardcodedIndoorViews.add(new IndoorView("nucleus_g", nucleusSouthEast, nucleusNorthEast, nucleusPolygon,
+        hardcodedIndoorViews.add(new IndoorView("nucleus_g", nucleusSouthEast, nucleusNorthEast, nucleusPolygon, nucleusHeightG,
                 BitmapDescriptorFactory.fromResource(R.drawable.nucleus_g)));
-        hardcodedIndoorViews.add(new IndoorView("nucleus_1f", nucleusSouthEast, nucleusNorthEast, nucleusPolygon,
+        hardcodedIndoorViews.add(new IndoorView("nucleus_1f", nucleusSouthEast, nucleusNorthEast, nucleusPolygon, nucleusHeight1F,
                 BitmapDescriptorFactory.fromResource(R.drawable.nucleus_f1)));
-        hardcodedIndoorViews.add(new IndoorView("nucleus_2f", nucleusSouthEast, nucleusNorthEast, nucleusPolygon,
+        hardcodedIndoorViews.add(new IndoorView("nucleus_2f", nucleusSouthEast, nucleusNorthEast, nucleusPolygon, nucleusHeight2F,
                 BitmapDescriptorFactory.fromResource(R.drawable.nucleus_f2)));
-        hardcodedIndoorViews.add(new IndoorView("nucleus_3f", nucleusSouthEast, nucleusNorthEast, nucleusPolygon,
+        hardcodedIndoorViews.add(new IndoorView("nucleus_3f", nucleusSouthEast, nucleusNorthEast, nucleusPolygon, nucleusHeight3F,
                 BitmapDescriptorFactory.fromResource(R.drawable.nucleus_f3)));
 
         // add Noreen and Kenneth Murray library
+        // map anchors
         LatLng librarySouthEast = new LatLng(55.9227289, -3.1751799);
         LatLng libraryNorthEast = new LatLng(55.9230537, -3.1747692);
-        List<LatLng> libraryPolygon = Arrays.asList(new LatLng(55.9227931, -3.1751766), // polygon to determine if map available
+
+        // building polygon to determine if map available
+        List<LatLng> libraryPolygon = Arrays.asList(new LatLng(55.9227931, -3.1751766),
                 new LatLng(55.9227931,-3.1747910),
                 new LatLng(55.9230569, -3.1747910),
                 new LatLng(55.9230569,-3.1751766),
                 new LatLng(55.9227931, -3.1751766));
 
-        hardcodedIndoorViews.add(new IndoorView("library_g", librarySouthEast, libraryNorthEast, libraryPolygon,
+        // approximate floor heights
+        float libraryHeightG = 0.0f;
+        float libraryHeight1F = 4.0f;
+        float libraryHeight2F = 8.0f;
+        float libraryHeight3F = 12.0f;
+
+        hardcodedIndoorViews.add(new IndoorView("library_g", librarySouthEast, libraryNorthEast, libraryPolygon, libraryHeightG,
                 BitmapDescriptorFactory.fromResource(R.drawable.library_g)));
-        hardcodedIndoorViews.add(new IndoorView("library_1f", librarySouthEast, libraryNorthEast, libraryPolygon,
+        hardcodedIndoorViews.add(new IndoorView("library_1f", librarySouthEast, libraryNorthEast, libraryPolygon, libraryHeight1F,
                 BitmapDescriptorFactory.fromResource(R.drawable.library_1f)));
-        hardcodedIndoorViews.add(new IndoorView("library_2f", librarySouthEast, libraryNorthEast, libraryPolygon,
+        hardcodedIndoorViews.add(new IndoorView("library_2f", librarySouthEast, libraryNorthEast, libraryPolygon, libraryHeight2F,
                 BitmapDescriptorFactory.fromResource(R.drawable.library_2f)));
-        hardcodedIndoorViews.add(new IndoorView("library_3f", librarySouthEast, libraryNorthEast, libraryPolygon,
+        hardcodedIndoorViews.add(new IndoorView("library_3f", librarySouthEast, libraryNorthEast, libraryPolygon, libraryHeight3F,
                 BitmapDescriptorFactory.fromResource(R.drawable.library_3f)));
 
+        // add hudson beare building
+        // map anchors
+        LatLng hbSouthEast = new LatLng(55.9223350, -3.1717790);
+        LatLng hbNorthEast = new LatLng(55.9227285, -3.1707690);
+
+        // building polygon to determine if map available
+        List<LatLng> hbPolygon = Arrays.asList(new LatLng(55.9223633, -3.1715284),
+                new LatLng(55.9225034, -3.1716816),
+                new LatLng(55.9226843, -3.1711569),
+                new LatLng(55.9225476, -3.1710128),
+                new LatLng(55.9225093, -3.1711043),
+                new LatLng(55.9224482, -3.1710305),
+                new LatLng(55.9225134, -3.1708636),
+                new LatLng(55.9224148, -3.1707657),
+                new LatLng(55.9223176, -3.1710205),
+                new LatLng(55.9224082, -3.1711368),
+                new LatLng(55.9224311, -3.1710872),
+                new LatLng(55.9224963, -3.1711693),
+                new LatLng(55.9223633, -3.1715284));
+
+        // approximate floor heights
+        float hbHeightLG = -4.5f;
+        float hbHeightG = 0.0f;
+
+        hardcodedIndoorViews.add(new IndoorView("hb_lg", hbSouthEast, hbNorthEast, hbPolygon, hbHeightLG,
+                BitmapDescriptorFactory.fromResource(R.drawable.hb_lg)));
+        hardcodedIndoorViews.add(new IndoorView("hb_g", hbSouthEast, hbNorthEast, hbPolygon, hbHeightG,
+                BitmapDescriptorFactory.fromResource(R.drawable.hb_g)));
+
+        // add flemming jenkin building
+        // map anchors
+        LatLng fjSouthEast = new LatLng(55.9220056, -3.1729490);
+        LatLng fjNorthEast = new LatLng(55.9228376, -3.1717913);
+
+        // building polygon to determine if map available
+        List<LatLng> fjPolygon = Arrays.asList(new LatLng(55.9220635, -3.1723247),
+                new LatLng(55.9226688, -3.1729443),
+                new LatLng(55.9228215, -3.1725835),
+                new LatLng(55.9222243, -3.1719023),
+                new LatLng(55.9220635, -3.1723247));
+
+        // approximate floor heights
+        float fjHeightG = 0.0f;
+        float fjHeight1f = 4.0f;
+
+        hardcodedIndoorViews.add(new IndoorView("fj_g", fjSouthEast, fjNorthEast, fjPolygon, fjHeightG,
+                BitmapDescriptorFactory.fromResource(R.drawable.fj_g)));
+        hardcodedIndoorViews.add(new IndoorView("fj_1f", fjSouthEast, fjNorthEast, fjPolygon, fjHeight1f,
+                BitmapDescriptorFactory.fromResource(R.drawable.fj_1f)));
+
+        // add sanderson building
+        // map anchors
+        LatLng sandersonSouthEast = new LatLng(55.9226892, -3.1725098);
+        LatLng sandersonNorthEast = new LatLng(55.9233514, -3.1713943);
+
+        // building polygon to determine if map available
+        List<LatLng> sandersonPolygon = Arrays.asList(new LatLng(55.9233631, -3.1719127),
+                new LatLng(55.9231082, -3.1725423),
+                new LatLng(55.9229731, -3.1723619),
+                new LatLng(55.9229964, -3.1722774),
+                new LatLng(55.9229684, -3.1722533),
+                new LatLng(55.9229428, -3.1723136),
+                new LatLng(55.9226532, -3.1719703),
+                new LatLng(55.9229058, -3.1713735),
+                new LatLng(55.9233631, -3.1719127));
+
+        // approximate floor heights
+        float sandersonHeightG = 0.0f;
+        float sandersonHeightMezz = 1.5f;
+        float sandersonHeight1f = 5.0f;
+
+        hardcodedIndoorViews.add(new IndoorView("sanderson_g", sandersonSouthEast, sandersonNorthEast, sandersonPolygon, sandersonHeightG,
+                BitmapDescriptorFactory.fromResource(R.drawable.sanderson_g)));
+        hardcodedIndoorViews.add(new IndoorView("sanderson_mezz", sandersonSouthEast, sandersonNorthEast, sandersonPolygon, sandersonHeightMezz,
+                BitmapDescriptorFactory.fromResource(R.drawable.sanderson_mezz)));
+        hardcodedIndoorViews.add(new IndoorView("sanderson_1f", sandersonSouthEast, sandersonNorthEast, sandersonPolygon, sandersonHeight1f,
+                BitmapDescriptorFactory.fromResource(R.drawable.sanderson_1f)));
 
         // adding polygons of each building to map
         PolygonOptions nucleusPolyOpts = new PolygonOptions().addAll(nucleusPolygon)
@@ -185,6 +282,24 @@ public class MapManager {
                 .fillColor(polyColor - 0xBF000000) // subtract BF from MSBs to get 0.25 opacity
                 .strokeColor(polyColor - 0x7F000000); // subtract 7F from MSBs to get 0.5 opacity
         buildingPolys.add(googleMap.addPolygon(libraryPolyOpts));
+
+        PolygonOptions hbPolyOpts = new PolygonOptions().addAll(hbPolygon)
+                .visible(false)
+                .fillColor(polyColor - 0xBF000000) // subtract BF from MSBs to get 0.25 opacity
+                .strokeColor(polyColor - 0x7F000000); // subtract 7F from MSBs to get 0.5 opacity
+        buildingPolys.add(googleMap.addPolygon(hbPolyOpts));
+
+        PolygonOptions fjPolyOpts = new PolygonOptions().addAll(fjPolygon)
+                .visible(false)
+                .fillColor(polyColor - 0xBF000000) // subtract BF from MSBs to get 0.25 opacity
+                .strokeColor(polyColor - 0x7F000000); // subtract 7F from MSBs to get 0.5 opacity
+        buildingPolys.add(googleMap.addPolygon(fjPolyOpts));
+
+        PolygonOptions sandersonPolyOpts = new PolygonOptions().addAll(sandersonPolygon)
+                .visible(false)
+                .fillColor(polyColor - 0xBF000000) // subtract BF from MSBs to get 0.25 opacity
+                .strokeColor(polyColor - 0x7F000000); // subtract 7F from MSBs to get 0.5 opacity
+        buildingPolys.add(googleMap.addPolygon(sandersonPolyOpts));
 
         return hardcodedIndoorViews;
     }
@@ -250,8 +365,9 @@ public class MapManager {
     /**
      * Using the current location, determines which {@link IndoorView}s are available for viewing.
      * If the currently viewed {@link IndoorView} is no longer visible after update, use the next available view.
+     * If auto floor enabled, show floor closest to current elevation
      */
-    public void updateViewableIndoorViews() {
+    public void updateViewableIndoorViews(boolean autoElevation, float currentElevation) {
 
         // updating currently viewable indoor views
         List<IndoorView> newViewableViews = new ArrayList<IndoorView>();;
@@ -274,10 +390,21 @@ public class MapManager {
         viewableIndoorViews.removeAll(newUnviewableViews);
         unviewableIndoorViews.addAll(newUnviewableViews);
 
-        // update currently shown view current view is gone and another view is available
-        if (!viewableIndoorViews.contains(currentIndoorView) && viewableIndoorViews.size() > 0) {
-            currentIndoorView = viewableIndoorViews.get(0);
-            updateCurrentIndoorView(currentIndoorView);
+        if (viewableIndoorViews.size() > 0) {
+            if (autoElevation) {
+                // find view closest to current view when auto elevation enabled
+                IndoorView nearestView = viewableIndoorViews.get(0);
+                for (IndoorView view : viewableIndoorViews) {
+                    if (Math.abs(view.getViewElevation() - currentElevation) < Math.abs(nearestView.getViewElevation() - currentElevation)){
+                        nearestView = view;
+                    }
+                }
+                updateCurrentIndoorView(nearestView);
+            } else if (!viewableIndoorViews.contains(currentIndoorView)) {
+                // update currently shown view as current view is gone and another view is available
+                IndoorView view = viewableIndoorViews.get(0);
+                updateCurrentIndoorView(view);
+            }
         }
     }
 
@@ -285,22 +412,24 @@ public class MapManager {
      * Show the next {@link IndoorView} on the {@link GoogleMap} if available.
      */
     public void showNextIndoorView() {
+        IndoorView view = currentIndoorView;
         int viewIdx = viewableIndoorViews.indexOf(currentIndoorView);
         if (viewIdx + 1 < viewableIndoorViews.size()) {
-            currentIndoorView = viewableIndoorViews.get(viewIdx + 1);
+            view = viewableIndoorViews.get(viewIdx + 1);
         }
-        updateCurrentIndoorView(currentIndoorView);
+        updateCurrentIndoorView(view);
     }
 
     /**
      * Show the previous {@link IndoorView} on the {@link GoogleMap} if available.
      */
     public void showPrevIndoorView() {
+        IndoorView view = currentIndoorView;
         int viewIdx = viewableIndoorViews.indexOf(currentIndoorView);
         if (viewIdx - 1 >= 0) {
-            currentIndoorView = viewableIndoorViews.get(viewIdx - 1);
+            view = viewableIndoorViews.get(viewIdx - 1);
         }
-        updateCurrentIndoorView(currentIndoorView);
+        updateCurrentIndoorView(view);
     }
 
     /**
@@ -368,8 +497,11 @@ public class MapManager {
      * @param view  The view to now display as a {@link GroundOverlay}.
      */
     private void updateCurrentIndoorView(IndoorView view) {
-        indoorViewOverlay.setPositionFromBounds(view.getViewBounds());
-        indoorViewOverlay.setImage(view.getBitMap());
+        if (currentIndoorView != view) {
+            indoorViewOverlay.setPositionFromBounds(view.getViewBounds());
+            indoorViewOverlay.setImage(view.getBitMap());
+            currentIndoorView = view;
+        }
     }
 
 }

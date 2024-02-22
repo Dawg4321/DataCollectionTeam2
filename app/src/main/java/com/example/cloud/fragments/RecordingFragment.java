@@ -60,6 +60,8 @@ public class RecordingFragment extends Fragment {
     private Button floorDownButton;
     // Button to toggle poly outline of available buildings
     private Button polyBuildingButton;
+    // Button to toggle auto floor changing using view elevation
+    private Button autoFloorButton;
     //Recording icon to show user recording is in progress
     private ImageView recIcon;
     //Compass icon to show user direction of heading
@@ -99,6 +101,7 @@ public class RecordingFragment extends Fragment {
     private boolean isIndoorViewEnabled; // bool to control whether indoor building views are visible
     private boolean isPolyViewEnabled; // bool to control whether poly of available buildings is visible
     private boolean isNormalMap; // bool to control whether satellite or normal map is displayed
+    private boolean isAutoFloor; // bool to control whether floor switching is automatic or manual
 
     /**
      * Public Constructor for the class.
@@ -126,6 +129,7 @@ public class RecordingFragment extends Fragment {
         isIndoorViewEnabled = false; // set indoor view to disabled until inside a boundary
         isPolyViewEnabled = false; // disable polyViewButton until map is ready
         isNormalMap = false; // disable map view changes until map is ready
+        isAutoFloor = false; // disable auto floor until map is ready
     }
 
     /**
@@ -298,9 +302,11 @@ public class RecordingFragment extends Fragment {
                         mapManager.hideIndoorView();
                         isIndoorViewEnabled = false;
 
-                        // hide floor up/down buttons and text as indoor view disabled
+                        // hide floor up/down/autofloor buttons and text as indoor view disabled
                         floorUpButton.setVisibility(View.GONE);
                         floorDownButton.setVisibility(View.GONE);
+                        autoFloorButton.setVisibility(View.GONE);
+                        isAutoFloor = false;
                         indoorViewText.setVisibility(View.GONE);
                     }
                     else { // show indoor view as already hidden
@@ -308,6 +314,7 @@ public class RecordingFragment extends Fragment {
                         isIndoorViewEnabled = true;
 
                         // show floor view buttons and text as indoor view enabled
+                        autoFloorButton.setVisibility(View.VISIBLE);
                         updateIndoorViewButtons();
                         updateIndoorViewText();
                     }
@@ -378,6 +385,35 @@ public class RecordingFragment extends Fragment {
                     else {
                         mapManager.showBuildingPolygons();
                         isPolyViewEnabled = true;
+                    }
+                };
+            }
+        });
+
+        // polyBuildingButton to toggle polygon outline of available buildings
+        this.autoFloorButton = getView().findViewById(R.id.autoFloorButton);
+        this.autoFloorButton.setVisibility(View.GONE);
+        this.autoFloorButton.setOnClickListener(new View.OnClickListener() {
+            /**
+             * {@inheritDoc}
+             * OnClick listener for button to show/hide polygons outlining buidlings.
+             * When clicked, the button's state is updated and the polygons for each building are shown/hidden
+             * on the recording {@link SupportMapFragment} using {@link com.google.android.gms.maps.model.GroundOverlay}
+             * objects inside {@link MapManager}.
+             */
+            @Override
+            public void onClick(View view) {
+                if (isMapInitialised) {
+                    // toggle auto floor feature
+                    if (isAutoFloor){
+                        isAutoFloor = false;
+                        updateIndoorViewButtons();
+                    }
+                    else {
+                        isAutoFloor = true;
+                        updateIndoorViewButtons();
+                        // update current indoor view to nearest floor
+                        mapManager.updateViewableIndoorViews(isAutoFloor, sensorFusion.getElevation());
                     }
                 };
             }
@@ -484,7 +520,7 @@ public class RecordingFragment extends Fragment {
             // only update is map is initialised
             if (isMapInitialised) {
                 mapManager.updateMarker(yDist, xDist, compassRotation); // update map marker using calculated movement distances
-                mapManager.updateViewableIndoorViews(); // update currently available indoor views
+                mapManager.updateViewableIndoorViews(isAutoFloor, elevationVal); // update currently available indoor views
                 // update estimated GNSS text
                 float[] estLatLong = mapManager.getEstimatedLatLng();
                 currentEstLat.setText(getString(R.string.currentEstLat, estLatLong[0]));
@@ -496,6 +532,9 @@ public class RecordingFragment extends Fragment {
                     indoorToggleButton.setVisibility(View.GONE);
                     floorUpButton.setVisibility(View.GONE);
                     floorDownButton.setVisibility(View.GONE);
+                    indoorViewText.setVisibility(View.GONE);
+                    autoFloorButton.setVisibility(View.GONE);
+                    isAutoFloor = false;
                 }
                 else {
                     // show indoor view button as an indoor view as indoor view available
@@ -519,17 +558,24 @@ public class RecordingFragment extends Fragment {
      * when there is a indoor view above/below the current indoor view.
      */
     private void updateIndoorViewButtons() {
-        // show/hide floorUpButton as floors above based on current view availability
-        if (mapManager.isNextIndoorView()) {
-            floorUpButton.setVisibility(View.VISIBLE);
-        } else {
-            floorUpButton.setVisibility(View.GONE);
+        if (!isAutoFloor) {
+            // show/hide floorUpButton as floors above based on current view availability
+            if (mapManager.isNextIndoorView()) {
+                floorUpButton.setVisibility(View.VISIBLE);
+            } else {
+                floorUpButton.setVisibility(View.GONE);
+            }
+            // show/hide floorDownButton as floors below based on current view availability
+            if (mapManager.isPrevIndoorView()) {
+                floorDownButton.setVisibility(View.VISIBLE);
+            } else {
+                floorDownButton.setVisibility(View.GONE);
+            }
         }
-        // show/hide floorDownButton as floors below based on current view availability
-        if (mapManager.isPrevIndoorView()) {
-            floorDownButton.setVisibility(View.VISIBLE);
-        } else {
+        else {
+            // hide next/previous floor buttons auto floor enabled
             floorDownButton.setVisibility(View.GONE);
+            floorUpButton.setVisibility(View.GONE);
         }
     }
     /**
