@@ -22,6 +22,7 @@ public class IndoorView {
     private LatLngBounds indoorPosition; // bounds used by GroundOverlay when rendering the image on the map
     private List<LatLng> indoorPolygon; // polygon of coordinates used to set view detection boundary
     private BitmapDescriptor indoorBitmap; // bitmap used by GroundOverlay to render the image
+    private float viewElevation; // minimum elevation of the view
 
     /**
      * IndoorView constructor.
@@ -30,13 +31,15 @@ public class IndoorView {
      * @param anchorSouthWest Southwest anchor coordinate used for when display the IndoorView with a {@link GroundOverlay} object.
      * @param anchorNorthEast Northeast anchor coordinate used for when display the IndoorView with a {@link GroundOverlay} object.
      * @param indoorPolygon List of coordinates used to specify the IndoorView's detection area.
+     * @param viewElevation approximate elevation of the view
      * @param indoorBitmap Bitmap to display.
      *
      */
-    IndoorView(String id, LatLng anchorSouthWest, LatLng anchorNorthEast, List<LatLng> indoorPolygon, BitmapDescriptor indoorBitmap) {
+    IndoorView(String id, LatLng anchorSouthWest, LatLng anchorNorthEast, List<LatLng> indoorPolygon, float viewElevation, BitmapDescriptor indoorBitmap) {
         this.id = id;
         this.indoorPosition = new LatLngBounds(anchorSouthWest, anchorNorthEast);
         this.indoorPolygon = indoorPolygon;
+        this.viewElevation = viewElevation;
         this.indoorBitmap = indoorBitmap;
     }
 
@@ -73,4 +76,11 @@ public class IndoorView {
      * @return string of the IndoorView's ID
      */
     public String getID() { return id; }
+
+    /**
+     * Gets the ID associated with the IndoorView
+     *
+     * @return float with the minimum elevation associated with the view
+     */
+    public float getViewElevation() { return viewElevation; }
 }

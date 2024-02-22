@@ -129,6 +129,7 @@
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="10dp"
                 android:elevation="2dp"
+                app:tint="@color/pastelBlue"
                 android:src="@drawable/ic_baseline_elevator_24"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/compass" />
@@ -256,6 +257,18 @@
                 app:iconTint="@color/darkLogoBlue"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/indoorViewText" />
+
+            <Button
+                android:id="@+id/autoFloorButton"
+                android:layout_width="55dp"
+                android:layout_height="55dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/round_button"
+                app:icon="@drawable/baseline_grid_on_24"
+                app:iconSize="25dp"
+                app:layout_constraintBottom_toTopOf="@+id/indoorToggleButton"
+                app:layout_constraintEnd_toEndOf="parent" />
 
             <androidx.cardview.widget.CardView
                 android:id="@+id/currentPositionCard"
